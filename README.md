@@ -1,50 +1,36 @@
 # MedTrack
 
-MedTrack is a Firebase-ready child immunization tracking frontend built with React, Vite, TypeScript, Tailwind CSS, and Redux Toolkit.
+MedTrack is a web-based child immunization tracking system built with React, Vite, TypeScript, Tailwind CSS, Redux Toolkit, and Firebase.
 
-## Current foundation
+## Phase 1 foundation
 
-- Responsive app shell with dedicated parent, staff, and admin views
-- Typed domain models for child profiles, immunization records, schedules, and reminders
-- Redux Toolkit slices for auth role switching, child selection/search, and reminder filtering
-- Immunization schedule generation from a reusable vaccine template
-- Firebase modular SDK wiring with environment-variable based configuration
-- Mobile-first dashboards for records, schedules, reminders, and reporting
+This phase delivers the application setup and UI foundation:
 
-## Tech stack
+- Vite + React + TypeScript project structure
+- Tailwind CSS configured through Vite
+- React Router with public and workspace route shells
+- Redux Toolkit store with `authSlice`, `uiSlice`, and `appConfigSlice`
+- Firebase modular SDK initialization from environment variables
+- Reusable base UI components for later phases
+- Placeholder pages for auth, dashboards, children, schedule, reminders, and admin
 
-- React 19
-- Vite 8
-- TypeScript
-- Tailwind CSS 4
-- Redux Toolkit
-- Firebase modular SDK
+## Available routes
 
-## Local setup
+- `/`
+- `/login`
+- `/register`
+- `/forgot-password`
+- `/dashboard/parent`
+- `/dashboard/staff`
+- `/dashboard/admin`
+- `/children`
+- `/immunization-schedule`
+- `/reminders`
+- `/admin`
 
-1. Install dependencies:
+## Environment variables
 
-```bash
-pnpm install
-```
-
-2. Create environment variables from the example file:
-
-```bash
-cp .env.example .env
-```
-
-3. Fill in your Firebase web app values inside `.env`.
-
-4. Start the development server:
-
-```bash
-pnpm dev
-```
-
-## Firebase configuration
-
-The app reads the following variables:
+Copy `.env.example` to `.env` and provide your Firebase web app values:
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -52,14 +38,18 @@ The app reads the following variables:
 - `VITE_FIREBASE_STORAGE_BUCKET`
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
-- `VITE_FIREBASE_MEASUREMENT_ID`
 
-If these values are missing, the interface stays in demo mode and uses local mock data instead of attempting to initialize Firebase.
+## Local development
 
-## Suggested next implementation phases
+```bash
+pnpm install
+pnpm dev
+```
 
-1. Replace demo auth role switching with Firebase Authentication and Firestore-backed user roles.
-2. Persist child registration, immunization updates, and reminder queues in Cloud Firestore.
-3. Add validated create/edit forms for child onboarding and vaccine recording.
-4. Move reminder sending into Firebase Cloud Functions with email and SMS providers.
-5. Add admin reporting exports, audit logs, and protected route guards.
+## Verification
+
+The Phase 1 foundation was verified with:
+
+- `pnpm lint`
+- `pnpm build`
+- `pnpm dev --host 127.0.0.1 --port 4174`

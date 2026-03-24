@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
+import appConfigReducer from '../features/app-config/app-config-slice'
 import authReducer from '../features/auth/auth-slice'
-import childrenReducer from '../features/children/children-slice'
-import remindersReducer from '../features/reminders/reminders-slice'
+import uiReducer from '../features/ui/ui-slice'
 
 export const store = configureStore({
   reducer: {
+    appConfig: appConfigReducer,
     auth: authReducer,
-    children: childrenReducer,
-    reminders: remindersReducer,
+    ui: uiReducer,
   },
 })
 

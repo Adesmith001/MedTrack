@@ -1,28 +1,31 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import { demoUsersByRole } from '../../lib/mock-data'
-import type { UserProfile, UserRole } from '../../types/domain'
+import type { AuthStatus, UserRole } from '../../types/app'
 
 interface AuthState {
-  activeRole: UserRole
-  profiles: Record<UserRole, UserProfile>
-  sessionMode: 'demo'
+  status: AuthStatus
+  currentRole: UserRole | null
 }
 
 const initialState: AuthState = {
-  activeRole: 'staff',
-  profiles: demoUsersByRole,
-  sessionMode: 'demo',
+  status: 'unauthenticated',
+  currentRole: null,
 }
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setActiveRole(state, action: PayloadAction<UserRole>) {
-      state.activeRole = action.payload
+    setAuthStatus(state, action: PayloadAction<AuthStatus>) {
+      state.status = action.payload
+    },
+    setCurrentRole(state, action: PayloadAction<UserRole | null>) {
+      state.currentRole = action.payload
+    },
+    resetAuthState() {
+      return initialState
     },
   },
 })
 
-export const { setActiveRole } = authSlice.actions
+export const { resetAuthState, setAuthStatus, setCurrentRole } = authSlice.actions
 export default authSlice.reducer

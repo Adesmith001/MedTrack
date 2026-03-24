@@ -1,11 +1,11 @@
 import { FoundationPage } from '../components/common/foundation-page'
 
-export function ChildrenPage() {
+export function AdminPage() {
   return (
     <FoundationPage
       eyebrow="Module"
-      title="Children"
-      description="Placeholder area for child registration, profile management, and record review."
+      title="Admin"
+      description="Placeholder admin surface for system settings, reports, and global controls."
       status="Placeholder"
     />
   )

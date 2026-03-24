@@ -1,23 +1,23 @@
 import { Link } from 'react-router-dom'
+import { Button } from '../components/ui/button'
+import { Card } from '../components/ui/card'
+import { PageContainer } from '../components/layout/page-container'
 
 export function NotFoundPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="surface max-w-lg rounded-[32px] p-10 text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-teal-700">404</p>
-        <h1 className="mt-4 font-display text-4xl font-bold text-slate-950">
-          This MedTrack page is missing.
-        </h1>
-        <p className="mt-4 text-sm leading-6 text-slate-600">
-          The route may have changed while the workspace was being scaffolded.
+    <PageContainer>
+      <Card className="mx-auto max-w-2xl text-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">404</p>
+        <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">Page not found</h1>
+        <p className="mt-3 text-sm text-slate-600">
+          The route does not exist in the current MedTrack foundation.
         </p>
-        <Link
-          to="/dashboard"
-          className="mt-6 inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white"
-        >
-          Return to dashboard
-        </Link>
-      </div>
-    </div>
+        <div className="mt-6">
+          <Link to="/">
+            <Button>Return home</Button>
+          </Link>
+        </div>
+      </Card>
+    </PageContainer>
   )
 }
