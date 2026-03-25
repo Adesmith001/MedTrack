@@ -7,6 +7,7 @@ import type {
   FirestoreQueryOptions,
   UpdateDocumentInput,
 } from '../../types/firestore'
+import { completeImmunizationSchedule } from '../immunization-records/immunization-records-slice'
 import { generateScheduleEntriesForChild, hydrateScheduleStatuses } from './schedule-engine'
 import { vaccineDefinitions } from './vaccine-definitions'
 
@@ -167,6 +168,16 @@ const immunizationSchedulesSlice = createSlice({
       .addCase(updateImmunizationSchedule.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message ?? 'Failed to update immunization schedule.'
+      })
+      .addCase(completeImmunizationSchedule.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        state.items = upsertEntity(state.items, action.payload.schedule)
+        state.current =
+          state.current?.id === action.payload.schedule.id ? action.payload.schedule : state.current
+      })
+      .addCase(completeImmunizationSchedule.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to synchronize schedule completion.'
       })
       .addCase(deleteImmunizationSchedule.fulfilled, (state, action) => {
         state.items = state.items.filter((item) => item.id !== action.payload)

@@ -1,34 +1,53 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
+import { Input } from '../components/ui/input'
 import { Loader } from '../components/ui/loader'
+import { Modal } from '../components/ui/modal'
 import { StatusBadge } from '../components/ui/status-badge'
 import { PageContainer } from '../components/layout/page-container'
 import { SectionHeader } from '../components/layout/section-header'
 import { fetchChildren } from '../features/children/children-slice'
-import { getVisibleChildren } from '../features/children/children-permissions'
+import { canManageChildren, getVisibleChildren } from '../features/children/children-permissions'
 import {
   clearImmunizationSchedulesFeedback,
   fetchImmunizationSchedules,
 } from '../features/immunization-schedules/immunization-schedules-slice'
+import {
+  defaultImmunizationCompletionValues,
+  validateImmunizationCompletionForm,
+  type ImmunizationCompletionFormValues,
+} from '../features/immunization-records/immunization-record-workflow'
+import {
+  clearImmunizationRecordsFeedback,
+  completeImmunizationSchedule,
+} from '../features/immunization-records/immunization-records-slice'
 import {
   getNextDueVaccine,
   getOverdueVaccines,
 } from '../features/immunization-schedules/schedule-engine'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
 import { useAuth } from '../hooks/use-auth'
-import { formatDisplayDate } from '../lib/date'
+import { formatDisplayDate, getTodayIsoDate } from '../lib/date'
+import type { ImmunizationSchedule } from '../types/models'
 
 export function SchedulePage() {
   const dispatch = useAppDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
   const children = useAppSelector((state) => state.children.items)
   const childrenStatus = useAppSelector((state) => state.children.status)
   const schedules = useAppSelector((state) => state.immunizationSchedules.items)
   const schedulesStatus = useAppSelector((state) => state.immunizationSchedules.status)
   const schedulesError = useAppSelector((state) => state.immunizationSchedules.error)
+  const recordsStatus = useAppSelector((state) => state.immunizationRecords.status)
+  const recordsError = useAppSelector((state) => state.immunizationRecords.error)
+  const [selectedSchedule, setSelectedSchedule] = useState<ImmunizationSchedule | null>(null)
+  const [completionValues, setCompletionValues] = useState<ImmunizationCompletionFormValues>({
+    ...defaultImmunizationCompletionValues,
+    dateAdministered: getTodayIsoDate(),
+  })
 
   useEffect(() => {
     if (!profile) {
@@ -85,6 +104,44 @@ export function SchedulePage() {
 
   const nextDue = selectedChild ? getNextDueVaccine(schedules) : null
   const overdueVaccines = getOverdueVaccines(schedules)
+  const canCompleteVaccines = canManageChildren(profile)
+  const completionErrors = validateImmunizationCompletionForm(completionValues)
+
+  function openCompletionModal(schedule: ImmunizationSchedule) {
+    setSelectedSchedule(schedule)
+    setCompletionValues({
+      dateAdministered: getTodayIsoDate(),
+      notes: '',
+    })
+    dispatch(clearImmunizationRecordsFeedback())
+  }
+
+  function closeCompletionModal() {
+    setSelectedSchedule(null)
+    dispatch(clearImmunizationRecordsFeedback())
+  }
+
+  async function handleCompletionSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!selectedChild || !selectedSchedule || !user || Object.keys(completionErrors).length > 0) {
+      return
+    }
+
+    const result = await dispatch(
+      completeImmunizationSchedule({
+        childId: selectedChild.id,
+        schedule: selectedSchedule,
+        dateAdministered: completionValues.dateAdministered,
+        notes: completionValues.notes.trim(),
+        staffId: user.uid,
+      }),
+    )
+
+    if (completeImmunizationSchedule.fulfilled.match(result)) {
+      closeCompletionModal()
+    }
+  }
 
   return (
     <PageContainer>
@@ -214,9 +271,14 @@ export function SchedulePage() {
                         <p className="mt-3 text-sm text-slate-500">{schedule.notes}</p>
                       ) : null}
                     </div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
-                      <p className="font-semibold text-slate-900">{selectedChild.fullName}</p>
-                      <p className="mt-1">DOB: {formatDisplayDate(selectedChild.dateOfBirth)}</p>
+                    <div className="flex flex-col items-start gap-3 md:items-end">
+                      <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                        <p className="font-semibold text-slate-900">{selectedChild.fullName}</p>
+                        <p className="mt-1">DOB: {formatDisplayDate(selectedChild.dateOfBirth)}</p>
+                      </div>
+                      {canCompleteVaccines && schedule.status !== 'completed' ? (
+                        <Button onClick={() => openCompletionModal(schedule)}>Mark as completed</Button>
+                      ) : null}
                     </div>
                   </div>
                 </Card>
@@ -225,6 +287,68 @@ export function SchedulePage() {
           )}
         </>
       )}
+
+      <Modal
+        title="Mark vaccine as completed"
+        description={
+          selectedSchedule
+            ? `Create a record for ${selectedSchedule.vaccineName} and update the linked schedule entry.`
+            : undefined
+        }
+        isOpen={Boolean(selectedSchedule)}
+        onClose={closeCompletionModal}
+      >
+        {selectedSchedule ? (
+          <form className="space-y-4" onSubmit={(event) => void handleCompletionSubmit(event)} noValidate>
+            {recordsError ? (
+              <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+                {recordsError}
+              </div>
+            ) : null}
+            <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
+              <p className="font-semibold text-slate-900">{selectedSchedule.vaccineName}</p>
+              <p className="mt-1">Recommended age: {selectedSchedule.recommendedAge}</p>
+              <p className="mt-1">Scheduled due date: {formatDisplayDate(selectedSchedule.dueDate)}</p>
+            </div>
+            <Input
+              id="date-administered"
+              name="dateAdministered"
+              type="date"
+              label="Date administered"
+              value={completionValues.dateAdministered}
+              onChange={(event) =>
+                setCompletionValues((current) => ({
+                  ...current,
+                  dateAdministered: event.target.value,
+                }))
+              }
+              error={completionErrors.dateAdministered}
+            />
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-slate-700">Notes</span>
+              <textarea
+                id="completion-notes"
+                name="notes"
+                rows={4}
+                value={completionValues.notes}
+                onChange={(event) =>
+                  setCompletionValues((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-600"
+                placeholder="Optional administration notes"
+              />
+            </label>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={recordsStatus === 'loading'}>
+                {recordsStatus === 'loading' ? 'Saving completion...' : 'Save completion'}
+              </Button>
+            </div>
+          </form>
+        ) : null}
+      </Modal>
     </PageContainer>
   )
 }

@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
 import { Loader } from '../../components/ui/loader'
+import { StatusBadge } from '../../components/ui/status-badge'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
 import {
@@ -12,8 +13,14 @@ import {
   fetchChildById,
 } from '../../features/children/children-slice'
 import { canManageChildren, canViewChild } from '../../features/children/children-permissions'
+import {
+  clearCurrentImmunizationRecord,
+  clearImmunizationRecordsFeedback,
+  fetchImmunizationRecords,
+} from '../../features/immunization-records/immunization-records-slice'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { useAuth } from '../../hooks/use-auth'
+import { formatDisplayDate } from '../../lib/date'
 
 export function ChildDetailsPage() {
   const dispatch = useAppDispatch()
@@ -23,6 +30,9 @@ export function ChildDetailsPage() {
   const current = useAppSelector((state) => state.children.current)
   const status = useAppSelector((state) => state.children.status)
   const error = useAppSelector((state) => state.children.error)
+  const records = useAppSelector((state) => state.immunizationRecords.items)
+  const recordsStatus = useAppSelector((state) => state.immunizationRecords.status)
+  const recordsError = useAppSelector((state) => state.immunizationRecords.error)
 
   useEffect(() => {
     dispatch(clearChildrenFeedback())
@@ -45,6 +55,21 @@ export function ChildDetailsPage() {
 
   const resolvedChild =
     current?.id === childId ? current : children.find((child) => child.id === childId) ?? null
+
+  useEffect(() => {
+    dispatch(clearImmunizationRecordsFeedback())
+    dispatch(clearCurrentImmunizationRecord())
+
+    if (!resolvedChild || !canViewChild(profile, resolvedChild)) {
+      return
+    }
+
+    void dispatch(
+      fetchImmunizationRecords({
+        filters: [{ field: 'childId', operator: '==', value: resolvedChild.id }],
+      }),
+    )
+  }, [dispatch, profile, resolvedChild])
 
   if (status === 'loading' && !resolvedChild) {
     return (
@@ -71,6 +96,10 @@ export function ChildDetailsPage() {
   if (!canViewChild(profile, resolvedChild)) {
     return <Navigate replace to="/children" />
   }
+
+  const childRecords = [...records]
+    .filter((record) => record.childId === resolvedChild.id)
+    .sort((left, right) => right.dateAdministered.localeCompare(left.dateAdministered))
 
   return (
     <PageContainer>
@@ -145,6 +174,62 @@ export function ChildDetailsPage() {
           </dl>
         </Card>
       </div>
+
+      <Card>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-bold text-slate-950">Immunization history</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Completed vaccine records are listed here for guardians and care teams to review.
+            </p>
+          </div>
+          <Link to={`/immunization-schedule?childId=${resolvedChild.id}`}>
+            <Button variant="secondary">Open schedule</Button>
+          </Link>
+        </div>
+
+        {recordsStatus === 'loading' ? (
+          <div className="mt-6 flex min-h-[160px] items-center justify-center">
+            <Loader label="Loading immunization history..." />
+          </div>
+        ) : recordsError ? (
+          <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {recordsError}
+          </div>
+        ) : childRecords.length === 0 ? (
+          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 px-6 py-10 text-center">
+            <p className="text-lg font-semibold text-slate-900">No completed vaccines yet</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Completed immunization records will appear here once staff update the schedule.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {childRecords.map((record) => (
+              <div key={record.id} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-lg font-semibold text-slate-950">{record.vaccineName}</h3>
+                      <StatusBadge status="completed" />
+                    </div>
+                    <p className="mt-3 text-sm text-slate-600">
+                      Administered on {formatDisplayDate(record.dateAdministered)}
+                    </p>
+                    {record.notes ? (
+                      <p className="mt-3 text-sm text-slate-500">{record.notes}</p>
+                    ) : null}
+                  </div>
+                  <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-600">
+                    <p className="font-semibold text-slate-900">Staff ID</p>
+                    <p className="mt-1">{record.staffId}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </PageContainer>
   )
 }
