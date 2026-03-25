@@ -19,6 +19,7 @@ import { ParentDashboardPage } from '../pages/dashboards/parent-dashboard-page'
 import { StaffDashboardPage } from '../pages/dashboards/staff-dashboard-page'
 import { NotFoundPage } from '../pages/not-found-page'
 import { HomePage } from '../pages/public/home-page'
+import { ReportsPage } from '../pages/reports-page'
 import { RemindersPage } from '../pages/reminders-page'
 import { SchedulePage } from '../pages/schedule-page'
 
@@ -62,6 +63,7 @@ export function AppRouter() {
           <Route element={<ProtectedRoute allowedRoles={roleGroups.staffAdmin} />}>
             <Route path="/children/new" element={<AddChildPage />} />
             <Route path="/children/:childId/edit" element={<EditChildPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reminders" element={<RemindersPage />} />
           </Route>
         </Route>

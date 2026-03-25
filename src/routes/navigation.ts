@@ -24,6 +24,7 @@ export const workspaceNavigation: NavigationItem[] = [
     to: '/immunization-schedule',
     roles: roleGroups.all,
   },
+  { label: 'Reports', to: '/reports', roles: roleGroups.staffAdmin },
   { label: 'Reminders', to: '/reminders', roles: roleGroups.staffAdmin },
   { label: 'Admin', to: '/admin', roles: roleGroups.admin },
 ]
