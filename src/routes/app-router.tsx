@@ -54,12 +54,12 @@ export function AppRouter() {
             <Route path="/children" element={<ChildrenPage />} />
             <Route path="/children/:childId" element={<ChildDetailsPage />} />
             <Route path="/immunization-schedule" element={<SchedulePage />} />
-            <Route path="/reminders" element={<RemindersPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={roleGroups.staffAdmin} />}>
             <Route path="/children/new" element={<AddChildPage />} />
             <Route path="/children/:childId/edit" element={<EditChildPage />} />
+            <Route path="/reminders" element={<RemindersPage />} />
           </Route>
         </Route>
       </Route>

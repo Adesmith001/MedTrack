@@ -7,6 +7,11 @@ import type {
   FirestoreQueryOptions,
   UpdateDocumentInput,
 } from '../../types/firestore'
+import {
+  reminderQueueService,
+  type GenerateReminderQueueOptions,
+  type GenerateReminderQueueResult,
+} from '../../services/reminder-queue-service'
 
 type RemindersState = EntityState<Reminder>
 
@@ -60,10 +65,20 @@ export const deleteReminder = createAsyncThunk('reminders/delete', async (id: st
   return id
 })
 
+export const generateReminderQueue = createAsyncThunk(
+  'reminders/generateQueue',
+  async (options?: GenerateReminderQueueOptions): Promise<GenerateReminderQueueResult> =>
+    reminderQueueService.generatePending(options),
+)
+
 const remindersSlice = createSlice({
   name: 'remindersData',
   initialState,
-  reducers: {},
+  reducers: {
+    clearRemindersFeedback(state) {
+      state.error = null
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchReminders.pending, (state) => {
@@ -99,7 +114,22 @@ const remindersSlice = createSlice({
         state.items = state.items.filter((item) => item.id !== action.payload)
         state.current = state.current?.id === action.payload ? null : state.current
       })
+      .addCase(generateReminderQueue.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
+      .addCase(generateReminderQueue.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        action.payload.created.forEach((reminder) => {
+          state.items = upsertEntity(state.items, reminder)
+        })
+      })
+      .addCase(generateReminderQueue.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to generate reminder queue.'
+      })
   },
 })
 
+export const { clearRemindersFeedback } = remindersSlice.actions
 export default remindersSlice.reducer

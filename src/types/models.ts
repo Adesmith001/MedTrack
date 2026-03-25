@@ -9,9 +9,10 @@ export type ReminderChannel = 'email' | 'sms'
 
 export type ReminderTriggerType =
   | 'manual'
-  | 'scheduled'
-  | 'due-soon'
-  | 'overdue-follow-up'
+  | '7-days-before'
+  | '3-days-before'
+  | '1-day-before'
+  | 'on-due-date'
 
 export type ReminderStatus = 'pending' | 'sent' | 'failed' | 'cancelled'
 

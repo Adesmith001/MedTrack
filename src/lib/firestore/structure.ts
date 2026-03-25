@@ -19,7 +19,7 @@ export const firestoreStructure = {
   },
   [firestoreCollections.reminders]: {
     description: 'Reminder jobs and delivery tracking for email and SMS notifications.',
-    primaryFields: ['childId', 'scheduleId', 'status'],
+    primaryFields: ['childId', 'scheduleId', 'triggerType', 'channel', 'status'],
   },
   [firestoreCollections.notifications]: {
     description: 'In-app and outbound notification records for operational updates.',
