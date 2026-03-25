@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { PublicShell } from '../components/layout/public-shell'
 import { WorkspaceShell } from '../components/layout/workspace-shell'
 import { roleGroups } from '../lib/auth/roles'
@@ -14,6 +14,7 @@ import { ChildDetailsPage } from '../pages/children/child-details-page'
 import { EditChildPage } from '../pages/children/edit-child-page'
 import { ChildrenPage } from '../pages/children-page'
 import { AdminDashboardPage } from '../pages/dashboards/admin-dashboard-page'
+import { DashboardRedirect } from '../pages/dashboards/dashboard-redirect'
 import { ParentDashboardPage } from '../pages/dashboards/parent-dashboard-page'
 import { StaffDashboardPage } from '../pages/dashboards/staff-dashboard-page'
 import { NotFoundPage } from '../pages/not-found-page'
@@ -37,6 +38,8 @@ export function AppRouter() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<WorkspaceShell />}>
+          <Route path="/dashboard" element={<DashboardRedirect />} />
+
           <Route element={<ProtectedRoute allowedRoles={roleGroups.parent} />}>
             <Route path="/dashboard/parent" element={<ParentDashboardPage />} />
           </Route>
@@ -64,7 +67,6 @@ export function AppRouter() {
         </Route>
       </Route>
 
-      <Route path="/dashboard" element={<Navigate replace to="/" />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
