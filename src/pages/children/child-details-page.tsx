@@ -68,7 +68,13 @@ export function ChildDetailsPage() {
 
     void dispatch(
       fetchImmunizationRecords({
-        filters: [{ field: 'childId', operator: '==', value: resolvedChild.id }],
+        filters:
+          profile?.role === 'parent'
+            ? [
+                { field: 'parentEmail', operator: '==', value: profile.email.toLowerCase() },
+                { field: 'childId', operator: '==', value: resolvedChild.id },
+              ]
+            : [{ field: 'childId', operator: '==', value: resolvedChild.id }],
       }),
     )
   }, [dispatch, profile, resolvedChild])
@@ -76,7 +82,7 @@ export function ChildDetailsPage() {
   if (status === 'loading' && !resolvedChild) {
     return (
       <PageContainer>
-        <Card className="flex min-h-[240px] items-center justify-center">
+        <Card className="flex min-h-60 items-center justify-center">
           <Loader label="Loading child profile..." />
         </Card>
       </PageContainer>
@@ -192,7 +198,7 @@ export function ChildDetailsPage() {
         </div>
 
         {recordsStatus === 'loading' ? (
-          <div className="mt-6 flex min-h-[160px] items-center justify-center">
+          <div className="mt-6 flex min-h-40 items-center justify-center">
             <Loader label="Loading immunization history..." />
           </div>
       ) : recordsError ? (

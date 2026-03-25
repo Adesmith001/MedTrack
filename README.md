@@ -106,7 +106,7 @@ pnpm functions:build
 
 ## Deployment
 
-This repo now includes Firebase Hosting and Functions deployment config in `firebase.json`.
+This repo now includes Firebase Hosting, Cloud Functions, Firestore rules, and Firestore index deployment config in `firebase.json`.
 
 Build before deploying:
 
@@ -127,6 +127,12 @@ Deploy functions:
 pnpm deploy:functions
 ```
 
+Deploy Firestore rules and indexes:
+
+```bash
+pnpm deploy:firestore
+```
+
 Deploy everything:
 
 ```bash
@@ -145,6 +151,8 @@ npm install -g firebase-tools
 - Frontend Firebase config is validated at runtime and shows a setup notice if incomplete.
 - Firestore and auth service access fail with clear setup messages when Firebase is not configured.
 - Functions compile separately from the frontend and are ready for Firebase deployment.
+- Firestore security rules live in `firestore.rules`.
+- Required composite indexes live in `firestore.indexes.json`.
 
 ## Documentation
 

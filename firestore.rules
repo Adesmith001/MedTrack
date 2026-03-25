@@ -1,0 +1,171 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDocPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasUserProfile() {
+      return isSignedIn() && exists(userDocPath());
+    }
+
+    function userProfile() {
+      return get(userDocPath()).data;
+    }
+
+    function isAdmin() {
+      return hasUserProfile() && userProfile().role == 'admin';
+    }
+
+    function isStaff() {
+      return hasUserProfile() && userProfile().role == 'staff';
+    }
+
+    function isStaffOrAdmin() {
+      return isStaff() || isAdmin();
+    }
+
+    function isCurrentUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserRole(role) {
+      return role == 'parent' || role == 'staff' || role == 'admin';
+    }
+
+    function matchesCurrentEmail(email) {
+      return isSignedIn()
+        && email is string
+        && (
+          (request.auth.token.email is string && request.auth.token.email == email)
+          || (hasUserProfile() && userProfile().email == email)
+        );
+    }
+
+    function isParentOwned(data) {
+      return data.parentEmail is string && matchesCurrentEmail(data.parentEmail);
+    }
+
+    function childDocPath(childId) {
+      return /databases/$(database)/documents/children/$(childId);
+    }
+
+    function scheduleDocPath(scheduleId) {
+      return /databases/$(database)/documents/immunizationSchedules/$(scheduleId);
+    }
+
+    function childExists(childId) {
+      return childId is string && exists(childDocPath(childId));
+    }
+
+    function scheduleExists(scheduleId) {
+      return scheduleId is string && exists(scheduleDocPath(scheduleId));
+    }
+
+    function childData(childId) {
+      return get(childDocPath(childId)).data;
+    }
+
+    function scheduleData(scheduleId) {
+      return get(scheduleDocPath(scheduleId)).data;
+    }
+
+    match /users/{userId} {
+      allow create: if isCurrentUser(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.fullName is string
+        && isValidUserRole(request.resource.data.role);
+
+      allow get: if isCurrentUser(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      allow update: if (
+          isCurrentUser(userId)
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.role == resource.data.role
+        ) || isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    match /children/{childId} {
+      allow get, list: if isStaffOrAdmin() || isParentOwned(resource.data);
+
+      allow create: if isStaffOrAdmin()
+        && request.resource.data.parentEmail is string
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isStaffOrAdmin()
+        && request.resource.data.parentEmail is string
+        && request.resource.data.createdBy == resource.data.createdBy;
+
+      allow delete: if isStaffOrAdmin();
+    }
+
+    match /immunizationSchedules/{scheduleId} {
+      allow get, list: if isStaffOrAdmin() || isParentOwned(resource.data);
+
+      allow create: if isStaffOrAdmin()
+        && childExists(request.resource.data.childId)
+        && request.resource.data.parentEmail == childData(request.resource.data.childId).parentEmail;
+
+      allow update: if isStaffOrAdmin()
+        && request.resource.data.childId == resource.data.childId
+        && request.resource.data.parentEmail == resource.data.parentEmail;
+
+      allow delete: if isStaffOrAdmin();
+    }
+
+    match /immunizationRecords/{recordId} {
+      allow get, list: if isStaffOrAdmin() || isParentOwned(resource.data);
+
+      allow create: if isStaffOrAdmin()
+        && childExists(request.resource.data.childId)
+        && scheduleExists(request.resource.data.scheduleId)
+        && request.resource.data.parentEmail == childData(request.resource.data.childId).parentEmail
+        && scheduleData(request.resource.data.scheduleId).childId == request.resource.data.childId
+        && scheduleData(request.resource.data.scheduleId).parentEmail == request.resource.data.parentEmail;
+
+      allow update: if isStaffOrAdmin()
+        && request.resource.data.childId == resource.data.childId
+        && request.resource.data.scheduleId == resource.data.scheduleId
+        && request.resource.data.parentEmail == resource.data.parentEmail;
+
+      allow delete: if isStaffOrAdmin();
+    }
+
+    match /reminders/{reminderId} {
+      allow get, list: if isStaffOrAdmin() || isParentOwned(resource.data);
+
+      allow create: if isStaffOrAdmin()
+        && childExists(request.resource.data.childId)
+        && scheduleExists(request.resource.data.scheduleId)
+        && request.resource.data.parentEmail == childData(request.resource.data.childId).parentEmail
+        && scheduleData(request.resource.data.scheduleId).childId == request.resource.data.childId
+        && scheduleData(request.resource.data.scheduleId).parentEmail == request.resource.data.parentEmail;
+
+      allow update: if isStaffOrAdmin()
+        && request.resource.data.childId == resource.data.childId
+        && request.resource.data.scheduleId == resource.data.scheduleId
+        && request.resource.data.parentEmail == resource.data.parentEmail;
+
+      allow delete: if isStaffOrAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow get, list: if isStaffOrAdmin() || (
+        isSignedIn()
+        && resource.data.userId is string
+        && resource.data.userId == request.auth.uid
+      );
+
+      allow create, update, delete: if isStaffOrAdmin();
+    }
+  }
+}

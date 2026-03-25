@@ -26,6 +26,7 @@ export interface ChildDocument {
 
 export interface ImmunizationScheduleDocument {
   childId: string
+  parentEmail: string
   vaccineName: string
   recommendedAge: string
   dueDate: string
@@ -35,6 +36,7 @@ export interface ImmunizationScheduleDocument {
 
 export interface ReminderDocument {
   childId: string
+  parentEmail: string
   scheduleId: string
   channel: ReminderChannel
   triggerType: 'manual' | '7-days-before' | '3-days-before' | '1-day-before' | 'on-due-date'

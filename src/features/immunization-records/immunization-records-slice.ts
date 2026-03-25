@@ -50,12 +50,14 @@ export const completeImmunizationSchedule = createAsyncThunk(
   'immunizationRecords/completeSchedule',
   async ({
     childId,
+    parentEmail,
     schedule,
     dateAdministered,
     notes,
     staffId,
   }: {
     childId: string
+    parentEmail: string
     schedule: ImmunizationSchedule
     dateAdministered: string
     notes: string
@@ -63,6 +65,7 @@ export const completeImmunizationSchedule = createAsyncThunk(
   }) => {
     const recordId = await immunizationRecordsService.create({
       childId,
+      parentEmail,
       scheduleId: schedule.id,
       vaccineName: schedule.vaccineName,
       dateAdministered,
@@ -72,6 +75,7 @@ export const completeImmunizationSchedule = createAsyncThunk(
 
     try {
       await immunizationSchedulesService.update(schedule.id, {
+        parentEmail,
         status: 'completed',
         notes: schedule.notes,
       })
@@ -84,6 +88,7 @@ export const completeImmunizationSchedule = createAsyncThunk(
       (await immunizationRecordsService.getById(recordId)) ?? {
         id: recordId,
         childId,
+        parentEmail,
         scheduleId: schedule.id,
         vaccineName: schedule.vaccineName,
         dateAdministered,

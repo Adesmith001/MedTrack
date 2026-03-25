@@ -36,9 +36,10 @@ export interface LoginUserInput {
 
 export async function registerUser(input: RegisterUserInput): Promise<UserProfile> {
   const authInstance = ensureAuth()
+  const normalizedEmail = input.email.trim().toLowerCase()
   const credential = await createUserWithEmailAndPassword(
     authInstance,
-    input.email,
+    normalizedEmail,
     input.password,
   )
 
@@ -47,7 +48,7 @@ export async function registerUser(input: RegisterUserInput): Promise<UserProfil
   const profileData: Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'> = {
     uid: credential.user.uid,
     fullName: input.fullName,
-    email: input.email,
+    email: normalizedEmail,
     role: input.role,
   }
 
@@ -63,7 +64,7 @@ export async function registerUser(input: RegisterUserInput): Promise<UserProfil
 
 export async function loginUser(input: LoginUserInput): Promise<void> {
   const authInstance = ensureAuth()
-  await signInWithEmailAndPassword(authInstance, input.email, input.password)
+  await signInWithEmailAndPassword(authInstance, input.email.trim(), input.password)
 }
 
 export async function logoutUser(): Promise<void> {
@@ -73,7 +74,7 @@ export async function logoutUser(): Promise<void> {
 
 export async function requestPasswordReset(email: string): Promise<void> {
   const authInstance = ensureAuth()
-  await sendPasswordResetEmail(authInstance, email)
+  await sendPasswordResetEmail(authInstance, email.trim())
 }
 
 export async function validatePasswordResetCode(code: string): Promise<string> {

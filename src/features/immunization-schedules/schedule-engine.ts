@@ -32,7 +32,7 @@ export function determineScheduleStatus(
 }
 
 export function generateScheduleEntriesForChild(
-  child: Pick<Child, 'id' | 'dateOfBirth'>,
+  child: Pick<Child, 'id' | 'dateOfBirth' | 'parentEmail'>,
   definitions: VaccineDefinition[],
   referenceDate = getTodayIsoDate(),
 ): CreateDocumentInput<ImmunizationSchedule>[] {
@@ -41,6 +41,7 @@ export function generateScheduleEntriesForChild(
 
     return {
       childId: child.id,
+      parentEmail: child.parentEmail,
       vaccineName: definition.vaccineName,
       recommendedAge: definition.recommendedAge,
       dueDate,

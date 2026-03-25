@@ -25,6 +25,7 @@ const child: Child = {
 const schedule: ImmunizationSchedule = {
   id: 'schedule_1',
   childId: 'child_1',
+  parentEmail: 'parent@example.com',
   vaccineName: 'Penta 1',
   recommendedAge: '6 weeks',
   dueDate: '2025-01-08',
@@ -64,6 +65,7 @@ describe('reminder-queue', () => {
     const existingReminder: Reminder = {
       id: 'queue_schedule_1__7-days-before__email',
       childId: 'child_1',
+      parentEmail: 'parent@example.com',
       scheduleId: 'schedule_1',
       channel: 'email',
       triggerType: '7-days-before',

@@ -114,12 +114,18 @@ function formatActivityTime(timestampMs: number): string {
   return new Date(timestampMs).toLocaleString()
 }
 
-async function listSchedulesByChildIds(childIds: string[]): Promise<ImmunizationSchedule[]> {
+async function listSchedulesByChildIds(
+  childIds: string[],
+  parentEmail: string,
+): Promise<ImmunizationSchedule[]> {
   const chunks = chunkValues(childIds)
   const results = await Promise.all(
     chunks.map((chunk) =>
       immunizationSchedulesService.list({
-        filters: [{ field: 'childId', operator: 'in', value: chunk }],
+        filters: [
+          { field: 'parentEmail', operator: '==', value: parentEmail },
+          { field: 'childId', operator: 'in', value: chunk },
+        ],
       }),
     ),
   )
@@ -127,12 +133,18 @@ async function listSchedulesByChildIds(childIds: string[]): Promise<Immunization
   return hydrateScheduleStatuses(results.flat()).sort((left, right) => left.dueDate.localeCompare(right.dueDate))
 }
 
-async function listRemindersByChildIds(childIds: string[]): Promise<Reminder[]> {
+async function listRemindersByChildIds(
+  childIds: string[],
+  parentEmail: string,
+): Promise<Reminder[]> {
   const chunks = chunkValues(childIds)
   const results = await Promise.all(
     chunks.map((chunk) =>
       remindersService.list({
-        filters: [{ field: 'childId', operator: 'in', value: chunk }],
+        filters: [
+          { field: 'parentEmail', operator: '==', value: parentEmail },
+          { field: 'childId', operator: 'in', value: chunk },
+        ],
       }),
     ),
   )
@@ -157,8 +169,8 @@ export async function loadParentDashboardData(parentEmail: string): Promise<Pare
 
   const childIds = children.map((child) => child.id)
   const [schedules, reminders] = await Promise.all([
-    listSchedulesByChildIds(childIds),
-    listRemindersByChildIds(childIds),
+    listSchedulesByChildIds(childIds, normalizedParentEmail),
+    listRemindersByChildIds(childIds, normalizedParentEmail),
   ])
 
   const today = getTodayIsoDate()

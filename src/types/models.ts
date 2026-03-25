@@ -42,6 +42,7 @@ export interface Child extends BaseDocument {
 
 export interface ImmunizationSchedule extends BaseDocument {
   childId: string
+  parentEmail: string
   vaccineName: string
   recommendedAge: string
   dueDate: string
@@ -51,6 +52,7 @@ export interface ImmunizationSchedule extends BaseDocument {
 
 export interface ImmunizationRecord extends BaseDocument {
   childId: string
+  parentEmail: string
   scheduleId: string
   vaccineName: string
   dateAdministered: string
@@ -60,6 +62,7 @@ export interface ImmunizationRecord extends BaseDocument {
 
 export interface Reminder extends BaseDocument {
   childId: string
+  parentEmail: string
   scheduleId: string
   channel: ReminderChannel
   triggerType: ReminderTriggerType

@@ -112,6 +112,7 @@ export function buildPendingReminderPayloads(
             id: createReminderDocumentId(schedule.id, rule.triggerType, channel),
             data: {
               childId: child.id,
+              parentEmail: child.parentEmail.trim().toLowerCase(),
               scheduleId: schedule.id,
               channel,
               triggerType: rule.triggerType,

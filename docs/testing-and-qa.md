@@ -26,12 +26,14 @@ Validate these flows before a demo or handoff:
 9. Trigger manual email reminder sending and confirm reminder status updates to `sent` or `failed`.
 10. Trigger manual SMS reminder sending and confirm reminder status updates to `sent` or `failed`.
 11. Review the parent, staff, and admin dashboards again and confirm counts and activity blocks reflect the latest data.
+12. Sign in as one parent and confirm they cannot open another parent's child record, schedule data, immunization history, or reminder-backed dashboard data.
 
 ## Missing setup checks
 
 - If Firebase web config is missing, the app should stay usable in setup-safe mode and show a clear setup notice.
 - If a backend request fails, confirm the page shows a readable error state instead of crashing.
 - If Functions provider secrets are missing, confirm reminder sends fail with a clear status and stored failure reason.
+- If Firestore rules or indexes changed, redeploy Firestore before QA and confirm restricted reads still work for `parent`, `staff`, and `admin`.
 
 ## Test focus
 
@@ -41,4 +43,5 @@ Current automated coverage prioritizes:
 - reminder queue generation and duplicate prevention
 - auth guard decision logic
 - critical auth and child-form validation rules
+- Firestore ownership constraints for parent-scoped data access
 - frontend config validation for Firebase setup

@@ -11,15 +11,15 @@ export const firestoreStructure = {
   },
   [firestoreCollections.immunizationSchedules]: {
     description: 'Planned vaccine schedule entries for each child, including due dates and status.',
-    primaryFields: ['childId', 'status', 'dueDate'],
+    primaryFields: ['childId', 'parentEmail', 'status', 'dueDate'],
   },
   [firestoreCollections.immunizationRecords]: {
     description: 'Completed vaccine administration records tied to children and schedule items.',
-    primaryFields: ['childId', 'scheduleId', 'staffId'],
+    primaryFields: ['childId', 'parentEmail', 'scheduleId', 'staffId'],
   },
   [firestoreCollections.reminders]: {
     description: 'Reminder jobs and delivery tracking for email and SMS notifications.',
-    primaryFields: ['childId', 'scheduleId', 'triggerType', 'channel', 'status'],
+    primaryFields: ['childId', 'parentEmail', 'scheduleId', 'triggerType', 'channel', 'status'],
   },
   [firestoreCollections.notifications]: {
     description: 'In-app and outbound notification records for operational updates.',

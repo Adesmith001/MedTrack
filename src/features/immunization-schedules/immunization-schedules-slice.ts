@@ -52,9 +52,17 @@ export const createImmunizationSchedule = createAsyncThunk(
 
 export const generateSchedulesForChild = createAsyncThunk(
   'immunizationSchedules/generateForChild',
-  async ({ childId, dateOfBirth }: { childId: string; dateOfBirth: string }) => {
+  async ({
+    childId,
+    dateOfBirth,
+    parentEmail,
+  }: {
+    childId: string
+    dateOfBirth: string
+    parentEmail: string
+  }) => {
     const entries = generateScheduleEntriesForChild(
-      { id: childId, dateOfBirth },
+      { id: childId, dateOfBirth, parentEmail },
       vaccineDefinitions,
     )
 

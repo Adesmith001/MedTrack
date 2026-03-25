@@ -27,9 +27,10 @@ describe('schedule-engine', () => {
       {
         id: 'child_1',
         dateOfBirth: '2025-01-01',
+        parentEmail: 'parent@example.com',
       },
       [
-      {
+        {
           code: 'bcg',
           vaccineName: 'BCG',
           recommendedAge: 'At birth',
@@ -49,6 +50,7 @@ describe('schedule-engine', () => {
     expect(schedules).toEqual([
       {
         childId: 'child_1',
+        parentEmail: 'parent@example.com',
         vaccineName: 'BCG',
         recommendedAge: 'At birth',
         dueDate: '2025-01-01',
@@ -57,6 +59,7 @@ describe('schedule-engine', () => {
       },
       {
         childId: 'child_1',
+        parentEmail: 'parent@example.com',
         vaccineName: 'OPV 1',
         recommendedAge: '6 weeks',
         dueDate: '2025-02-12',
@@ -71,6 +74,7 @@ describe('schedule-engine', () => {
       {
         id: 'one',
         childId: 'child_1',
+        parentEmail: 'parent@example.com',
         vaccineName: 'BCG',
         recommendedAge: 'At birth',
         dueDate: '2025-01-01',
@@ -82,6 +86,7 @@ describe('schedule-engine', () => {
       {
         id: 'two',
         childId: 'child_1',
+        parentEmail: 'parent@example.com',
         vaccineName: 'Penta 1',
         recommendedAge: '6 weeks',
         dueDate: '2025-01-08',
@@ -93,6 +98,7 @@ describe('schedule-engine', () => {
       {
         id: 'three',
         childId: 'child_1',
+        parentEmail: 'parent@example.com',
         vaccineName: 'Measles',
         recommendedAge: '9 months',
         dueDate: '2025-09-01',

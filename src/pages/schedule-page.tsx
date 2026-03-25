@@ -101,10 +101,16 @@ export function SchedulePage() {
 
     void dispatch(
       fetchImmunizationSchedules({
-        filters: [{ field: 'childId', operator: '==', value: selectedChild.id }],
+        filters:
+          profile?.role === 'parent'
+            ? [
+                { field: 'parentEmail', operator: '==', value: profile.email.toLowerCase() },
+                { field: 'childId', operator: '==', value: selectedChild.id },
+              ]
+            : [{ field: 'childId', operator: '==', value: selectedChild.id }],
       }),
     )
-  }, [dispatch, selectedChild])
+  }, [dispatch, profile, selectedChild])
 
   const nextDue = selectedChild ? getNextDueVaccine(schedules) : null
   const overdueVaccines = getOverdueVaccines(schedules)
@@ -136,6 +142,7 @@ export function SchedulePage() {
     const result = await dispatch(
       completeImmunizationSchedule({
         childId: selectedChild.id,
+        parentEmail: selectedChild.parentEmail,
         schedule: selectedSchedule,
         dateAdministered: completionValues.dateAdministered,
         notes: completionValues.notes.trim(),
@@ -185,7 +192,7 @@ export function SchedulePage() {
       ) : null}
 
       {childrenStatus === 'loading' ? (
-        <Card className="flex min-h-[240px] items-center justify-center">
+        <Card className="flex min-h-60 items-center justify-center">
           <Loader label="Loading children..." />
         </Card>
       ) : !selectedChild ? (
@@ -257,7 +264,7 @@ export function SchedulePage() {
           </div>
 
           {schedulesStatus === 'loading' ? (
-            <Card className="flex min-h-[240px] items-center justify-center">
+            <Card className="flex min-h-60 items-center justify-center">
               <Loader label="Loading immunization schedule..." />
             </Card>
           ) : schedulesError ? (
@@ -334,7 +341,7 @@ export function SchedulePage() {
                 {recordsError}
               </Notice>
             ) : null}
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+            <div className="rounded-60 border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
               <p className="font-semibold text-slate-900">{selectedSchedule.vaccineName}</p>
               <p className="mt-1">Recommended age: {selectedSchedule.recommendedAge}</p>
               <p className="mt-1">Scheduled due date: {formatDisplayDate(selectedSchedule.dueDate)}</p>

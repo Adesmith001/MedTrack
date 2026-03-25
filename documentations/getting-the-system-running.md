@@ -103,16 +103,31 @@ Deploy functions only:
 pnpm deploy:functions
 ```
 
+Deploy Firestore rules and indexes only:
+
+```bash
+pnpm deploy:firestore
+```
+
 Deploy everything:
 
 ```bash
 pnpm deploy
 ```
 
-## 10. Recommended reviewer/demo flow
+## 10. Firestore security and indexing
+
+- Firestore security rules are stored in `firestore.rules`.
+- Firestore composite indexes are stored in `firestore.indexes.json`.
+- Parent-facing reads for schedules, records, and reminders now depend on the replicated `parentEmail` field, so new writes should continue to preserve that field.
+- If you already have Firestore data from before this change, backfill `parentEmail` onto existing schedule, record, and reminder documents before relying on parent-scoped reads in production.
+- After changing either file, deploy Firestore before validating the affected workflow in the browser.
+
+## 11. Recommended reviewer/demo flow
 
 1. Run the automated checks.
 2. Confirm `.env` and Functions env values are present.
 3. Start the app and verify the setup notice is gone.
-4. Validate login, child registration, schedule generation, reminders, and dashboards.
-5. Deploy hosting and functions from the configured Firebase project.
+4. Deploy Firestore rules and indexes if they changed.
+5. Validate login, child registration, schedule generation, reminders, and dashboards.
+6. Deploy hosting and functions from the configured Firebase project.

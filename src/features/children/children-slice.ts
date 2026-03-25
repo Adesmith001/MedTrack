@@ -55,7 +55,7 @@ export const createChildWithSchedule = createAsyncThunk(
     }
 
     const schedules = generateScheduleEntriesForChild(
-      { id: child.id, dateOfBirth: child.dateOfBirth },
+      { id: child.id, dateOfBirth: child.dateOfBirth, parentEmail: child.parentEmail },
       vaccineDefinitions,
     )
 
