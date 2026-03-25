@@ -41,6 +41,7 @@ Current automated coverage prioritizes:
 
 - schedule generation and status utilities
 - reminder queue generation and duplicate prevention
+- dashboard loaders using fresh service responses instead of static fallback data
 - auth guard decision logic
 - critical auth and child-form validation rules
 - Firestore ownership constraints for parent-scoped data access
