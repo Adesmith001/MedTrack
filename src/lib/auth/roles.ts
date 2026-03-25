@@ -4,6 +4,7 @@ export const roleGroups = {
   parent: ['parent'] as UserRole[],
   staff: ['staff'] as UserRole[],
   admin: ['admin'] as UserRole[],
+  staffAdmin: ['staff', 'admin'] as UserRole[],
   all: ['parent', 'staff', 'admin'] as UserRole[],
 } as const
 

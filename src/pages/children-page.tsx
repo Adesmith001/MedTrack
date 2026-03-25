@@ -1,12 +1,1 @@
-import { FoundationPage } from '../components/common/foundation-page'
-
-export function ChildrenPage() {
-  return (
-    <FoundationPage
-      eyebrow="Module"
-      title="Children"
-      description="Placeholder area for child registration, profile management, and record review."
-      status="Placeholder"
-    />
-  )
-}
+export { ChildrenListPage as ChildrenPage } from './children/children-list-page'

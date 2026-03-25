@@ -9,6 +9,9 @@ import { LoginPage } from '../pages/auth/login-page'
 import { RegisterPage } from '../pages/auth/register-page'
 import { ResetPasswordPage } from '../pages/auth/reset-password-page'
 import { AdminPage } from '../pages/admin-page'
+import { AddChildPage } from '../pages/children/add-child-page'
+import { ChildDetailsPage } from '../pages/children/child-details-page'
+import { EditChildPage } from '../pages/children/edit-child-page'
 import { ChildrenPage } from '../pages/children-page'
 import { AdminDashboardPage } from '../pages/dashboards/admin-dashboard-page'
 import { ParentDashboardPage } from '../pages/dashboards/parent-dashboard-page'
@@ -49,8 +52,14 @@ export function AppRouter() {
 
           <Route element={<ProtectedRoute allowedRoles={roleGroups.all} />}>
             <Route path="/children" element={<ChildrenPage />} />
+            <Route path="/children/:childId" element={<ChildDetailsPage />} />
             <Route path="/immunization-schedule" element={<SchedulePage />} />
             <Route path="/reminders" element={<RemindersPage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={roleGroups.staffAdmin} />}>
+            <Route path="/children/new" element={<AddChildPage />} />
+            <Route path="/children/:childId/edit" element={<EditChildPage />} />
           </Route>
         </Route>
       </Route>

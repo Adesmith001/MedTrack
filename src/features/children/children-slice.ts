@@ -63,7 +63,14 @@ export const deleteChild = createAsyncThunk('children/delete', async (id: string
 const childrenSlice = createSlice({
   name: 'children',
   initialState,
-  reducers: {},
+  reducers: {
+    clearChildrenFeedback(state) {
+      state.error = null
+    },
+    clearCurrentChild(state) {
+      state.current = null
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchChildren.pending, (state) => {
@@ -91,13 +98,31 @@ const childrenSlice = createSlice({
         state.status = 'failed'
         state.error = action.error.message ?? 'Failed to fetch child.'
       })
+      .addCase(createChild.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
       .addCase(createChild.fulfilled, (state, action) => {
+        state.status = 'succeeded'
         state.items = upsertEntity(state.items, action.payload)
         state.current = action.payload
       })
+      .addCase(createChild.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to create child.'
+      })
+      .addCase(updateChild.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
       .addCase(updateChild.fulfilled, (state, action) => {
+        state.status = 'succeeded'
         state.items = upsertEntity(state.items, action.payload)
         state.current = action.payload
+      })
+      .addCase(updateChild.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to update child.'
       })
       .addCase(deleteChild.fulfilled, (state, action) => {
         state.items = state.items.filter((item) => item.id !== action.payload)
@@ -106,4 +131,5 @@ const childrenSlice = createSlice({
   },
 })
 
+export const { clearChildrenFeedback, clearCurrentChild } = childrenSlice.actions
 export default childrenSlice.reducer
