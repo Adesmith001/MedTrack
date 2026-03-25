@@ -4,6 +4,8 @@ import { toggleSidebar, setSidebarOpen } from '../../features/ui/ui-slice'
 import { workspaceNavigation } from '../../routes/navigation'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
+import { useAuth } from '../../hooks/use-auth'
+import { logoutUser } from '../../features/auth/auth-slice'
 
 export function WorkspaceShell() {
   const dispatch = useAppDispatch()
@@ -11,6 +13,15 @@ export function WorkspaceShell() {
   const appName = useAppSelector((state) => state.appConfig.appName)
   const environment = useAppSelector((state) => state.appConfig.environment)
   const firebaseReady = useAppSelector((state) => state.appConfig.firebaseReady)
+  const { isLoading, profile } = useAuth()
+  const visibleNavigation = workspaceNavigation.filter(
+    (item) => !item.roles || (profile ? item.roles.includes(profile.role) : false),
+  )
+
+  async function handleLogout() {
+    await dispatch(logoutUser())
+    dispatch(setSidebarOpen(false))
+  }
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -29,7 +40,9 @@ export function WorkspaceShell() {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-display text-2xl font-bold text-slate-950">{appName}</p>
-            <p className="text-sm text-slate-500">Foundation workspace</p>
+            <p className="text-sm text-slate-500">
+              {profile ? `${profile.fullName} | ${profile.role}` : 'Secure workspace'}
+            </p>
           </div>
           <Button variant="ghost" className="lg:hidden" onClick={() => dispatch(setSidebarOpen(false))}>
             Close
@@ -44,7 +57,7 @@ export function WorkspaceShell() {
         </div>
 
         <nav className="mt-8 space-y-2">
-          {workspaceNavigation.map((item) => (
+          {visibleNavigation.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -60,6 +73,12 @@ export function WorkspaceShell() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="mt-8">
+          <Button fullWidth variant="secondary" onClick={() => void handleLogout()} disabled={isLoading}>
+            {isLoading ? 'Signing out...' : 'Logout'}
+          </Button>
+        </div>
       </aside>
 
       <div className="px-4 py-4 sm:px-6 lg:px-8">
@@ -68,11 +87,18 @@ export function WorkspaceShell() {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
               Workspace
             </p>
-            <p className="text-sm text-slate-500">Responsive shell ready for later feature phases</p>
+            <p className="text-sm text-slate-500">
+              {profile ? `Authenticated as ${profile.role}` : 'Authenticated workspace'}
+            </p>
           </div>
-          <Button variant="secondary" className="lg:hidden" onClick={() => dispatch(toggleSidebar())}>
-            Menu
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" className="lg:hidden" onClick={() => dispatch(toggleSidebar())}>
+              Menu
+            </Button>
+            <Button variant="ghost" className="hidden lg:inline-flex" onClick={() => void handleLogout()} disabled={isLoading}>
+              {isLoading ? 'Signing out...' : 'Logout'}
+            </Button>
+          </div>
         </header>
 
         <Outlet />

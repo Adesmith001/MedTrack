@@ -4,6 +4,7 @@ import {
   deleteDocument,
   getDocumentById,
   listDocuments,
+  setDocument,
   updateDocument,
 } from '../lib/firestore/repository'
 import type {
@@ -19,6 +20,9 @@ export function createCollectionService<TDocument extends BaseDocument>(
   return {
     create(data: CreateDocumentInput<TDocument>) {
       return createDocument<TDocument>(collectionName, data)
+    },
+    set(id: string, data: CreateDocumentInput<TDocument>) {
+      return setDocument<TDocument>(collectionName, id, data)
     },
     getById(id: string) {
       return getDocumentById<TDocument>(collectionName, id)

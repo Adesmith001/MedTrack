@@ -20,12 +20,10 @@ export type NotificationType = 'system' | 'reminder' | 'record-update'
 export type NotificationChannel = 'in-app' | 'email' | 'sms'
 
 export interface UserProfile extends BaseDocument {
+  uid: string
   fullName: string
   email: string
-  phone: string
   role: UserRole
-  hospitalId: string
-  isActive: boolean
 }
 
 export interface Child extends BaseDocument {

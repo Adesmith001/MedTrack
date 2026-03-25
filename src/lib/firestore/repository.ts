@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   type DocumentData,
@@ -81,6 +82,21 @@ export async function createDocument<TDocument extends BaseDocument>(
   }
   const snapshot = await addDoc(collectionRef, payload)
   return snapshot.id
+}
+
+export async function setDocument<TDocument extends BaseDocument>(
+  collectionName: FirestoreCollectionName,
+  id: string,
+  data: CreateDocumentInput<TDocument>,
+): Promise<void> {
+  const db = ensureFirestore()
+  const documentRef = doc(db, collectionName, id)
+  const payload: FirestoreWritePayload<TDocument> = {
+    ...(data as FirestoreWritePayload<TDocument>),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }
+  await setDoc(documentRef, payload)
 }
 
 export async function getDocumentById<TDocument extends BaseDocument>(

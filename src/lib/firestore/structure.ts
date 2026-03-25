@@ -3,7 +3,7 @@ import { firestoreCollections } from './collections'
 export const firestoreStructure = {
   [firestoreCollections.users]: {
     description: 'Application users and role profiles for parent, staff, and admin accounts.',
-    primaryFields: ['role', 'hospitalId', 'email'],
+    primaryFields: ['uid', 'role', 'email'],
   },
   [firestoreCollections.children]: {
     description: 'Registered child profiles linked to guardian contact details and a hospital.',

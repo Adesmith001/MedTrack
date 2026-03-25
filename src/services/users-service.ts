@@ -6,11 +6,11 @@ const baseService = createCollectionService<UserProfile>(firestoreCollections.us
 
 export const usersService = {
   ...baseService,
-  listByHospital(hospitalId: string) {
-    return baseService.list({
-      filters: [{ field: 'hospitalId', operator: '==', value: hospitalId }],
-      sort: [{ field: 'fullName', direction: 'asc' }],
-    })
+  createProfile(uid: string, data: Omit<UserProfile, 'id' | 'createdAt' | 'updatedAt'>) {
+    return baseService.set(uid, data)
+  },
+  getByUid(uid: string) {
+    return baseService.getById(uid)
   },
   listByRole(role: UserProfile['role']) {
     return baseService.list({

@@ -1,5 +1,4 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Button } from '../ui/button'
 import { publicNavigation } from '../../routes/navigation'
 
 export function PublicShell() {
@@ -23,9 +22,7 @@ export function PublicShell() {
               </NavLink>
             ))}
           </nav>
-          <div className="hidden md:block">
-            <Button variant="secondary">Phase 1</Button>
-          </div>
+          <p className="hidden text-sm text-slate-500 md:block">Secure access for parent, staff, and admin</p>
         </div>
       </header>
 
