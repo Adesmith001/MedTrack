@@ -1,16 +1,18 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import { hasFirebaseConfig } from '../../lib/firebase'
+import { firebaseSetupMessage, hasFirebaseConfig } from '../../lib/firebase'
 
 interface AppConfigState {
   appName: string
   environment: string
   firebaseReady: boolean
+  setupMessage: string
 }
 
 const initialState: AppConfigState = {
   appName: 'MedTrack',
   environment: import.meta.env.MODE,
   firebaseReady: hasFirebaseConfig,
+  setupMessage: firebaseSetupMessage,
 }
 
 const appConfigSlice = createSlice({

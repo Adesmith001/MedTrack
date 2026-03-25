@@ -87,5 +87,18 @@ pnpm functions:build
 Recent verification completed with:
 
 - `pnpm lint`
+- `pnpm test`
 - `pnpm build`
 - `pnpm dev --host 127.0.0.1 --port 4175`
+
+## Testing and QA
+
+Automated checks now cover:
+
+- schedule generation and status utilities
+- reminder queue generation and duplicate prevention
+- auth guard decision logic
+- critical authentication and child-form validation
+- Firebase web config validation
+
+For a repeatable demo checklist and manual verification flow, see [docs/testing-and-qa.md](/c:/Users/USER/Downloads/Documents/Codes/medtrack/docs/testing-and-qa.md).

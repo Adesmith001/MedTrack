@@ -2,7 +2,10 @@ import { useDeferredValue, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
+import { EmptyState } from '../../components/ui/empty-state'
+import { Input } from '../../components/ui/input'
 import { Loader } from '../../components/ui/loader'
+import { Notice } from '../../components/ui/notice'
 import { TableShell } from '../../components/ui/table-shell'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
@@ -90,17 +93,19 @@ export function ChildrenListPage() {
       />
 
       <Card>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <input
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <Input
             type="search"
+            label="Search child records"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search by child, parent, or hospital ID"
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-600 sm:max-w-md"
+            hint="Search works across child name, parent name, and hospital card number."
+            containerClassName="max-w-2xl"
           />
-          <p className="text-sm text-slate-500">
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-500">
             {filteredChildren.length} child{filteredChildren.length === 1 ? '' : 'ren'} in view
-          </p>
+          </div>
         </div>
       </Card>
 
@@ -109,19 +114,19 @@ export function ChildrenListPage() {
           <Loader label="Loading children..." />
         </Card>
       ) : error ? (
-        <Card>
-          <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>
-        </Card>
+        <Notice tone="error" title="Unable to load children">
+          {error}
+        </Notice>
       ) : filteredChildren.length === 0 ? (
         <Card>
-          <div className="rounded-3xl border border-dashed border-slate-300 px-6 py-12 text-center">
-            <p className="text-lg font-semibold text-slate-900">No child records found</p>
-            <p className="mt-2 text-sm text-slate-500">
-              {searchTerm
+          <EmptyState
+            title="No child records found"
+            description={
+              searchTerm
                 ? 'Try a different child name, parent name, or hospital ID.'
-                : 'Registered children will appear here once they are added.'}
-            </p>
-          </div>
+                : 'Registered children will appear here once they are added.'
+            }
+          />
         </Card>
       ) : (
         <>

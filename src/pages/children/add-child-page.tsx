@@ -1,9 +1,9 @@
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { Card } from '../../components/ui/card'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
+import { Notice } from '../../components/ui/notice'
 import {
   emptyChildFormValues,
   sanitizePhoneInput,
@@ -88,12 +88,12 @@ export function AddChildPage() {
       <SectionHeader
         eyebrow="Children"
         title="Add child"
-        description="Register a new child record and link it to a guardian account."
+        description="Register a new child record, link it to a guardian account, and generate the initial immunization schedule."
       />
       {error ? (
-        <Card>
-          <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>
-        </Card>
+        <Notice tone="error" title="Unable to save child record">
+          {error}
+        </Notice>
       ) : null}
       <ChildFormCard
         values={values}

@@ -2,7 +2,9 @@ import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Card } from '../../components/ui/card'
+import { EmptyState } from '../../components/ui/empty-state'
 import { Loader } from '../../components/ui/loader'
+import { Notice } from '../../components/ui/notice'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
 import {
@@ -58,7 +60,10 @@ export function EditChildPage() {
     return (
       <PageContainer>
         <Card>
-          <p className="text-sm text-slate-600">Child record could not be loaded.</p>
+          <EmptyState
+            title="Child record unavailable"
+            description="We could not load this child profile for editing. Try returning to the children list and opening the record again."
+          />
         </Card>
       </PageContainer>
     )
@@ -164,12 +169,12 @@ function EditChildFormContent({
       <SectionHeader
         eyebrow="Children"
         title="Edit child"
-        description="Update a registered child profile and save changes to Firestore."
+        description="Update the registered child profile and keep contact details accurate for reminders and follow-up."
       />
       {error ? (
-        <Card>
-          <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>
-        </Card>
+        <Notice tone="error" title="Unable to save changes">
+          {error}
+        </Notice>
       ) : null}
       <ChildFormCard
         values={values}

@@ -3,6 +3,8 @@ import { Link, Navigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { Notice } from '../../components/ui/notice'
+import { SelectField } from '../../components/ui/select-field'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
 import { clearAuthFeedback, registerUser } from '../../features/auth/auth-slice'
@@ -65,9 +67,9 @@ export function RegisterPage() {
       <Card className="mx-auto w-full max-w-xl">
         <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)} noValidate>
           {error ? (
-            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+            <Notice tone="error" title="Unable to create account">
               {error}
-            </div>
+            </Notice>
           ) : null}
 
           <Input
@@ -92,30 +94,19 @@ export function RegisterPage() {
             error={fieldErrors.email}
           />
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Role</span>
-            <select
-              id="register-role"
-              name="role"
-              value={selectedRole}
-              onChange={(event) => setSelectedRole(event.target.value as UserRole | '')}
-              aria-invalid={Boolean(fieldErrors.role)}
-              aria-describedby={fieldErrors.role ? 'register-role-error' : undefined}
-              className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-teal-600 ${
-                fieldErrors.role ? 'border-rose-400' : 'border-slate-200'
-              }`}
-            >
+          <SelectField
+            id="register-role"
+            name="role"
+            label="Role"
+            value={selectedRole}
+            onChange={(event) => setSelectedRole(event.target.value as UserRole | '')}
+            error={fieldErrors.role}
+          >
               <option value="">Select role</option>
               <option value="parent">Parent</option>
               <option value="staff">Staff</option>
               <option value="admin">Admin</option>
-            </select>
-            {fieldErrors.role ? (
-              <span id="register-role-error" className="block text-xs text-rose-600">
-                {fieldErrors.role}
-              </span>
-            ) : null}
-          </label>
+          </SelectField>
 
           <Input
             id="register-password"

@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { Notice } from '../../components/ui/notice'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
 import { clearAuthFeedback, confirmPasswordReset } from '../../features/auth/auth-slice'
@@ -98,15 +99,23 @@ export function ResetPasswordPage() {
           <p className="text-sm text-slate-500">Validating your password reset link...</p>
         ) : null}
         {email ? <p className="text-sm text-slate-600">Resetting password for {email}</p> : null}
-        {localError ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{localError}</p> : null}
-        {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+        {localError ? (
+          <Notice tone="error" title="Reset link unavailable">
+            {localError}
+          </Notice>
+        ) : null}
+        {error ? (
+          <Notice tone="error" title="Unable to update password">
+            {error}
+          </Notice>
+        ) : null}
         {successMessage ? (
-          <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <Notice tone="success" title="Password updated">
             <p>{successMessage}</p>
             <Link to="/login" className="mt-2 inline-flex font-semibold underline">
               Return to login
             </Link>
-          </div>
+          </Notice>
         ) : null}
 
         <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>

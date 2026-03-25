@@ -24,7 +24,7 @@ export function WorkspaceShell() {
   }
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.08),transparent_28%),linear-gradient(180deg,#f6faf7_0%,#edf4ee_48%,#f7faf8_100%)] lg:grid lg:grid-cols-[292px_minmax(0,1fr)]">
       <div
         className={`fixed inset-0 z-30 bg-slate-950/35 lg:hidden ${
           isSidebarOpen ? 'block' : 'hidden'
@@ -33,7 +33,7 @@ export function WorkspaceShell() {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[280px] border-r border-slate-200 bg-white px-5 py-6 transition lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-[292px] border-r border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(245,249,246,0.96)_100%)] px-5 py-6 shadow-[0_24px_60px_rgba(15,23,42,0.10)] backdrop-blur lg:static lg:translate-x-0 lg:shadow-none ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -44,7 +44,7 @@ export function WorkspaceShell() {
               {profile ? `${profile.fullName} | ${profile.role}` : 'Secure workspace'}
             </p>
           </div>
-          <Button variant="ghost" className="lg:hidden" onClick={() => dispatch(setSidebarOpen(false))}>
+          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => dispatch(setSidebarOpen(false))}>
             Close
           </Button>
         </div>
@@ -62,10 +62,10 @@ export function WorkspaceShell() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `block rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                `block rounded-2xl px-4 py-3 text-sm font-semibold tracking-[-0.01em] transition ${
                   isActive
-                    ? 'bg-slate-950 text-white'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                    ? 'bg-slate-950 text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)]'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-950'
                 }`
               }
             >
@@ -82,9 +82,9 @@ export function WorkspaceShell() {
       </aside>
 
       <div className="px-4 py-4 sm:px-6 lg:px-8">
-        <header className="mb-6 flex items-center justify-between rounded-[28px] border border-slate-200 bg-white/85 px-4 py-4 backdrop-blur">
+        <header className="mb-6 flex items-center justify-between rounded-[28px] border border-slate-200/80 bg-white/78 px-4 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.05)] backdrop-blur">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-teal-700">
               Workspace
             </p>
             <p className="text-sm text-slate-500">
@@ -92,10 +92,10 @@ export function WorkspaceShell() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" className="lg:hidden" onClick={() => dispatch(toggleSidebar())}>
+            <Button variant="secondary" size="sm" className="lg:hidden" onClick={() => dispatch(toggleSidebar())}>
               Menu
             </Button>
-            <Button variant="ghost" className="hidden lg:inline-flex" onClick={() => void handleLogout()} disabled={isLoading}>
+            <Button variant="ghost" size="sm" className="hidden lg:inline-flex" onClick={() => void handleLogout()} disabled={isLoading}>
               {isLoading ? 'Signing out...' : 'Logout'}
             </Button>
           </div>

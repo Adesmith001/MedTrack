@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { Notice } from '../../components/ui/notice'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
 import { clearAuthFeedback, loginUser } from '../../features/auth/auth-slice'
@@ -49,9 +50,9 @@ export function LoginPage() {
       <Card className="mx-auto w-full max-w-xl">
         <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)} noValidate>
           {error ? (
-            <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+            <Notice tone="error" title="Unable to sign in">
               {error}
-            </div>
+            </Notice>
           ) : null}
 
           <Input

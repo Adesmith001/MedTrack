@@ -4,7 +4,7 @@ import { publicNavigation } from '../../routes/navigation'
 export function PublicShell() {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/82 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <NavLink to="/" className="font-display text-2xl font-bold text-slate-950">
             MedTrack
@@ -15,7 +15,7 @@ export function PublicShell() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `text-sm font-medium transition ${isActive ? 'text-slate-950' : 'text-slate-500'}`
+                  `text-sm font-semibold transition ${isActive ? 'text-slate-950' : 'text-slate-500 hover:text-slate-950'}`
                 }
               >
                 {item.label}

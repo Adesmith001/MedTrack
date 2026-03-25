@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { Notice } from '../../components/ui/notice'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
 import { clearAuthFeedback, sendPasswordReset } from '../../features/auth/auth-slice'
@@ -40,13 +41,17 @@ export function ForgotPasswordPage() {
       />
       <Card className="mx-auto w-full max-w-xl">
         {error ? (
-          <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
-            {error}
+          <div className="mb-4">
+            <Notice tone="error" title="Unable to send reset link">
+              {error}
+            </Notice>
           </div>
         ) : null}
         {successMessage ? (
-          <div className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {successMessage}
+          <div className="mb-4">
+            <Notice tone="success" title="Reset link sent">
+              {successMessage}
+            </Notice>
           </div>
         ) : null}
         <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)} noValidate>

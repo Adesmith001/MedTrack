@@ -2,6 +2,8 @@ import type { FormEvent } from 'react'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
+import { SelectField } from '../../components/ui/select-field'
+import { Textarea } from '../../components/ui/textarea'
 import type { ChildFormErrors, ChildFormValues } from '../../features/children/child-form'
 
 interface ChildFormCardProps {
@@ -26,6 +28,12 @@ export function ChildFormCard({
 }: ChildFormCardProps) {
   return (
     <Card className="mx-auto w-full max-w-3xl">
+      <div className="mb-6 rounded-[24px] border border-slate-200 bg-slate-50/80 px-4 py-4">
+        <p className="text-sm font-semibold text-slate-900">Registration details</p>
+        <p className="mt-1 text-sm leading-6 text-slate-500">
+          Keep names and contact information exactly as they should appear on clinic records and reminder messages.
+        </p>
+      </div>
       <form className="space-y-5" onSubmit={onSubmit} noValidate>
         <div className="grid gap-5 md:grid-cols-2">
           <Input
@@ -35,6 +43,7 @@ export function ChildFormCard({
             value={values.fullName}
             onChange={(event) => onChange('fullName', event.target.value)}
             error={errors.fullName}
+            hint="Use the full registered name for the child record."
           />
           <Input
             id="child-date-of-birth"
@@ -45,30 +54,19 @@ export function ChildFormCard({
             onChange={(event) => onChange('dateOfBirth', event.target.value)}
             error={errors.dateOfBirth}
           />
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Gender</span>
-            <select
-              id="child-gender"
-              name="gender"
-              value={values.gender}
-              onChange={(event) => onChange('gender', event.target.value as ChildFormValues['gender'])}
-              aria-invalid={Boolean(errors.gender)}
-              aria-describedby={errors.gender ? 'child-gender-error' : undefined}
-              className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-teal-600 ${
-                errors.gender ? 'border-rose-400' : 'border-slate-200'
-              }`}
-            >
+          <SelectField
+            id="child-gender"
+            name="gender"
+            label="Gender"
+            value={values.gender}
+            onChange={(event) => onChange('gender', event.target.value as ChildFormValues['gender'])}
+            error={errors.gender}
+          >
               <option value="">Select gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
               <option value="other">Other</option>
-            </select>
-            {errors.gender ? (
-              <span id="child-gender-error" className="block text-xs text-rose-600">
-                {errors.gender}
-              </span>
-            ) : null}
-          </label>
+          </SelectField>
           <Input
             id="child-hospital-id"
             name="hospitalId"
@@ -76,6 +74,7 @@ export function ChildFormCard({
             value={values.hospitalId}
             onChange={(event) => onChange('hospitalId', event.target.value)}
             error={errors.hospitalId}
+            hint="This can be a hospital identifier, card number, or clinic reference."
           />
           <Input
             id="child-parent-name"
@@ -92,6 +91,8 @@ export function ChildFormCard({
             value={values.parentPhone}
             onChange={(event) => onChange('parentPhone', event.target.value)}
             error={errors.parentPhone}
+            hint="Include a reachable phone number for SMS reminders."
+            inputMode="tel"
           />
           <Input
             id="child-parent-email"
@@ -101,6 +102,7 @@ export function ChildFormCard({
             value={values.parentEmail}
             onChange={(event) => onChange('parentEmail', event.target.value)}
             error={errors.parentEmail}
+            hint="Used for parent access and email reminders."
           />
           <Input
             id="child-address"
@@ -112,20 +114,18 @@ export function ChildFormCard({
           />
         </div>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Notes</span>
-          <textarea
-            id="child-notes"
-            name="notes"
-            rows={4}
-            value={values.notes}
-            onChange={(event) => onChange('notes', event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-600"
-            placeholder="Optional clinical or registration notes"
-          />
-        </label>
+        <Textarea
+          id="child-notes"
+          name="notes"
+          label="Notes"
+          rows={4}
+          value={values.notes}
+          onChange={(event) => onChange('notes', event.target.value)}
+          placeholder="Optional clinical or registration notes"
+          hint="Add only the context the next staff member should see quickly."
+        />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end border-t border-slate-200 pt-4">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : submitLabel}
           </Button>

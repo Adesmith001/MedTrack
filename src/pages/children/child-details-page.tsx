@@ -2,7 +2,9 @@ import { useEffect } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { Card } from '../../components/ui/card'
+import { EmptyState } from '../../components/ui/empty-state'
 import { Loader } from '../../components/ui/loader'
+import { Notice } from '../../components/ui/notice'
 import { StatusBadge } from '../../components/ui/status-badge'
 import { PageContainer } from '../../components/layout/page-container'
 import { SectionHeader } from '../../components/layout/section-header'
@@ -85,9 +87,10 @@ export function ChildDetailsPage() {
     return (
       <PageContainer>
         <Card>
-          <p className="text-sm text-slate-600">
-            {error ?? 'The requested child record could not be found.'}
-          </p>
+          <EmptyState
+            title="Child record not found"
+            description={error ?? 'The requested child record could not be found.'}
+          />
         </Card>
       </PageContainer>
     )
@@ -192,18 +195,20 @@ export function ChildDetailsPage() {
           <div className="mt-6 flex min-h-[160px] items-center justify-center">
             <Loader label="Loading immunization history..." />
           </div>
-        ) : recordsError ? (
-          <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      ) : recordsError ? (
+        <div className="mt-6">
+          <Notice tone="error" title="Unable to load immunization history">
             {recordsError}
-          </div>
-        ) : childRecords.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 px-6 py-10 text-center">
-            <p className="text-lg font-semibold text-slate-900">No completed vaccines yet</p>
-            <p className="mt-2 text-sm text-slate-500">
-              Completed immunization records will appear here once staff update the schedule.
-            </p>
-          </div>
-        ) : (
+          </Notice>
+        </div>
+      ) : childRecords.length === 0 ? (
+        <div className="mt-6">
+          <EmptyState
+            title="No completed vaccines yet"
+            description="Completed immunization records will appear here once staff update the schedule."
+          />
+        </div>
+      ) : (
           <div className="mt-6 space-y-4">
             {childRecords.map((record) => (
               <div key={record.id} className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5">

@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { PageContainer } from '../components/layout/page-container'
+import { SectionHeader } from '../components/layout/section-header'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
+import { EmptyState } from '../components/ui/empty-state'
 import { Input } from '../components/ui/input'
 import { Loader } from '../components/ui/loader'
 import { Modal } from '../components/ui/modal'
+import { Notice } from '../components/ui/notice'
 import { StatusBadge } from '../components/ui/status-badge'
-import { PageContainer } from '../components/layout/page-container'
-import { SectionHeader } from '../components/layout/section-header'
+import { Textarea } from '../components/ui/textarea'
 import { fetchChildren } from '../features/children/children-slice'
 import { canManageChildren, getVisibleChildren } from '../features/children/children-permissions'
-import {
-  clearImmunizationSchedulesFeedback,
-  fetchImmunizationSchedules,
-} from '../features/immunization-schedules/immunization-schedules-slice'
 import {
   defaultImmunizationCompletionValues,
   validateImmunizationCompletionForm,
@@ -23,6 +22,10 @@ import {
   clearImmunizationRecordsFeedback,
   completeImmunizationSchedule,
 } from '../features/immunization-records/immunization-records-slice'
+import {
+  clearImmunizationSchedulesFeedback,
+  fetchImmunizationSchedules,
+} from '../features/immunization-schedules/immunization-schedules-slice'
 import {
   getNextDueVaccine,
   getOverdueVaccines,
@@ -44,6 +47,7 @@ export function SchedulePage() {
   const recordsStatus = useAppSelector((state) => state.immunizationRecords.status)
   const recordsError = useAppSelector((state) => state.immunizationRecords.error)
   const [selectedSchedule, setSelectedSchedule] = useState<ImmunizationSchedule | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [completionValues, setCompletionValues] = useState<ImmunizationCompletionFormValues>({
     ...defaultImmunizationCompletionValues,
     dateAdministered: getTodayIsoDate(),
@@ -108,6 +112,7 @@ export function SchedulePage() {
   const completionErrors = validateImmunizationCompletionForm(completionValues)
 
   function openCompletionModal(schedule: ImmunizationSchedule) {
+    setSuccessMessage(null)
     setSelectedSchedule(schedule)
     setCompletionValues({
       dateAdministered: getTodayIsoDate(),
@@ -139,6 +144,9 @@ export function SchedulePage() {
     )
 
     if (completeImmunizationSchedule.fulfilled.match(result)) {
+      setSuccessMessage(
+        `${selectedSchedule.vaccineName} was marked as completed for ${selectedChild.fullName}.`,
+      )
       closeCompletionModal()
     }
   }
@@ -148,8 +156,14 @@ export function SchedulePage() {
       <SectionHeader
         eyebrow="Schedules"
         title="Immunization schedule engine"
-        description="Generated vaccine timelines are calculated from each child’s date of birth and the configured vaccine definitions."
+        description="Generated vaccine timelines are calculated from each child's date of birth and the configured vaccine definitions."
       />
+
+      {successMessage ? (
+        <Notice tone="success" title="Schedule updated">
+          {successMessage}
+        </Notice>
+      ) : null}
 
       {visibleChildren.length > 0 ? (
         <div className="flex flex-wrap gap-3">
@@ -176,19 +190,17 @@ export function SchedulePage() {
         </Card>
       ) : !selectedChild ? (
         <Card>
-          <div className="rounded-3xl border border-dashed border-slate-300 px-6 py-12 text-center">
-            <p className="text-lg font-semibold text-slate-900">No schedule available yet</p>
-            <p className="mt-2 text-sm text-slate-500">
-              Register a child first to generate immunization schedule entries.
-            </p>
-            {profile?.role !== 'parent' ? (
-              <div className="mt-5">
+          <EmptyState
+            title="No schedule available yet"
+            description="Register a child first to generate immunization schedule entries."
+            action={
+              profile?.role !== 'parent' ? (
                 <Link to="/children/new">
                   <Button>Add child</Button>
                 </Link>
-              </div>
-            ) : null}
-          </div>
+              ) : undefined
+            }
+          />
         </Card>
       ) : (
         <>
@@ -249,11 +261,9 @@ export function SchedulePage() {
               <Loader label="Loading immunization schedule..." />
             </Card>
           ) : schedulesError ? (
-            <Card>
-              <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {schedulesError}
-              </p>
-            </Card>
+            <Notice tone="error" title="Unable to load schedule">
+              {schedulesError}
+            </Notice>
           ) : (
             <div className="space-y-4">
               {schedules.map((schedule) => (
@@ -297,19 +307,41 @@ export function SchedulePage() {
         }
         isOpen={Boolean(selectedSchedule)}
         onClose={closeCompletionModal}
+        footer={
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button variant="secondary" onClick={closeCompletionModal}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="schedule-completion-form"
+              disabled={recordsStatus === 'loading'}
+            >
+              {recordsStatus === 'loading' ? 'Saving completion...' : 'Save completion'}
+            </Button>
+          </div>
+        }
       >
         {selectedSchedule ? (
-          <form className="space-y-4" onSubmit={(event) => void handleCompletionSubmit(event)} noValidate>
+          <form
+            id="schedule-completion-form"
+            className="space-y-4"
+            onSubmit={(event) => void handleCompletionSubmit(event)}
+            noValidate
+          >
             {recordsError ? (
-              <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+              <Notice tone="error" title="Unable to save completion">
                 {recordsError}
-              </div>
+              </Notice>
             ) : null}
-            <div className="rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
               <p className="font-semibold text-slate-900">{selectedSchedule.vaccineName}</p>
               <p className="mt-1">Recommended age: {selectedSchedule.recommendedAge}</p>
               <p className="mt-1">Scheduled due date: {formatDisplayDate(selectedSchedule.dueDate)}</p>
             </div>
+            <Notice tone="warning" title="Confirm before saving">
+              This action creates an immunization record and marks the linked schedule entry as completed.
+            </Notice>
             <Input
               id="date-administered"
               name="dateAdministered"
@@ -324,28 +356,21 @@ export function SchedulePage() {
               }
               error={completionErrors.dateAdministered}
             />
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">Notes</span>
-              <textarea
-                id="completion-notes"
-                name="notes"
-                rows={4}
-                value={completionValues.notes}
-                onChange={(event) =>
-                  setCompletionValues((current) => ({
-                    ...current,
-                    notes: event.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-600"
-                placeholder="Optional administration notes"
-              />
-            </label>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={recordsStatus === 'loading'}>
-                {recordsStatus === 'loading' ? 'Saving completion...' : 'Save completion'}
-              </Button>
-            </div>
+            <Textarea
+              id="completion-notes"
+              name="notes"
+              rows={4}
+              label="Notes"
+              value={completionValues.notes}
+              onChange={(event) =>
+                setCompletionValues((current) => ({
+                  ...current,
+                  notes: event.target.value,
+                }))
+              }
+              placeholder="Optional administration notes"
+              hint="Use this for brief clinical context or dosing notes."
+            />
           </form>
         ) : null}
       </Modal>
