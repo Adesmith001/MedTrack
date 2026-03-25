@@ -8,6 +8,7 @@ export interface NavigationItem {
 }
 
 export const publicNavigation: NavigationItem[] = [
+  { label: 'Home', to: '/' },
   { label: 'Login', to: '/login' },
   { label: 'Register', to: '/register' },
   { label: 'Forgot Password', to: '/forgot-password' },

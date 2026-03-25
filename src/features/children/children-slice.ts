@@ -7,6 +7,9 @@ import type {
   FirestoreQueryOptions,
   UpdateDocumentInput,
 } from '../../types/firestore'
+import { immunizationSchedulesService } from '../../services/immunization-schedules-service'
+import { generateScheduleEntriesForChild } from '../immunization-schedules/schedule-engine'
+import { vaccineDefinitions } from '../immunization-schedules/vaccine-definitions'
 
 type ChildrenState = EntityState<Child>
 
@@ -36,6 +39,27 @@ export const createChild = createAsyncThunk(
     if (!child) {
       throw new Error('Unable to load created child document.')
     }
+
+    return child
+  },
+)
+
+export const createChildWithSchedule = createAsyncThunk(
+  'children/createWithSchedule',
+  async (payload: CreateDocumentInput<Child>) => {
+    const childId = await childrenService.create(payload)
+    const child = await childrenService.getById(childId)
+
+    if (!child) {
+      throw new Error('Unable to load created child document.')
+    }
+
+    const schedules = generateScheduleEntriesForChild(
+      { id: child.id, dateOfBirth: child.dateOfBirth },
+      vaccineDefinitions,
+    )
+
+    await immunizationSchedulesService.createBatch(schedules)
 
     return child
   },
@@ -110,6 +134,19 @@ const childrenSlice = createSlice({
       .addCase(createChild.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message ?? 'Failed to create child.'
+      })
+      .addCase(createChildWithSchedule.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
+      .addCase(createChildWithSchedule.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        state.items = upsertEntity(state.items, action.payload)
+        state.current = action.payload
+      })
+      .addCase(createChildWithSchedule.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to create child and schedule.'
       })
       .addCase(updateChild.pending, (state) => {
         state.status = 'loading'

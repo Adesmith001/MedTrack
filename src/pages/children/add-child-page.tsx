@@ -13,7 +13,7 @@ import {
 import {
   clearChildrenFeedback,
   clearCurrentChild,
-  createChild,
+  createChildWithSchedule,
 } from '../../features/children/children-slice'
 import { canManageChildren } from '../../features/children/children-permissions'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
@@ -64,7 +64,7 @@ export function AddChildPage() {
     }
 
     const result = await dispatch(
-      createChild({
+      createChildWithSchedule({
         fullName: values.fullName.trim(),
         dateOfBirth: values.dateOfBirth,
         gender,
@@ -78,7 +78,7 @@ export function AddChildPage() {
       }),
     )
 
-    if (createChild.fulfilled.match(result)) {
+    if (createChildWithSchedule.fulfilled.match(result)) {
       navigate(`/children/${result.payload.id}`)
     }
   }

@@ -79,11 +79,16 @@ export function ChildDetailsPage() {
         title={resolvedChild.fullName}
         description="Review the stored profile information for this child record."
         actions={
-          canManageChildren(profile) ? (
-            <Link to={`/children/${resolvedChild.id}/edit`}>
-              <Button>Edit child</Button>
+          <div className="flex flex-wrap gap-3">
+            <Link to={`/immunization-schedule?childId=${resolvedChild.id}`}>
+              <Button variant="secondary">View schedule</Button>
             </Link>
-          ) : undefined
+            {canManageChildren(profile) ? (
+              <Link to={`/children/${resolvedChild.id}/edit`}>
+                <Button>Edit child</Button>
+              </Link>
+            ) : null}
+          </div>
         }
       />
 
