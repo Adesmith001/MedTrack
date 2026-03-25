@@ -10,10 +10,11 @@ const firebaseConfig = firebaseResolution.config
 export const missingFirebaseKeys = firebaseResolution.missingKeys
 export const hasFirebaseConfig = firebaseResolution.isReady
 export const firebaseSetupMessage = firebaseResolution.message
+export const firebaseFunctionsRegion = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'us-central1'
 
 const firebaseApp = hasFirebaseConfig ? initializeApp(firebaseConfig) : null
 
 export { firebaseApp }
 export const auth = firebaseApp ? getAuth(firebaseApp) : null
 export const firestore = firebaseApp ? getFirestore(firebaseApp) : null
-export const functions = firebaseApp ? getFunctions(firebaseApp, 'us-central1') : null
+export const functions = firebaseApp ? getFunctions(firebaseApp, firebaseFunctionsRegion) : null

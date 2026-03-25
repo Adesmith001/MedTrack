@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "functions:build": "pnpm --dir functions build"
+    "functions:build": "pnpm --dir functions build",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy": "firebase deploy"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",

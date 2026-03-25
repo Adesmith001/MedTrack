@@ -1,0 +1,36 @@
+{
+  "functions": {
+    "source": "functions",
+    "predeploy": [
+      "pnpm --dir functions build"
+    ]
+  },
+  "hosting": {
+    "public": "dist",
+    "predeploy": [
+      "pnpm build"
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|svg|png|jpg|jpeg|webp)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=31536000,immutable"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,51 +1,62 @@
 # MedTrack
 
-MedTrack is a web-based child immunization tracking system built with React, Vite, TypeScript, Tailwind CSS, Redux Toolkit, and Firebase.
+MedTrack is a web-based child immunization tracking system built for parent, staff, and admin workflows. It combines a React frontend with Firebase Authentication, Cloud Firestore, Firebase Hosting, and Firebase Cloud Functions to manage registration, schedules, immunization records, reminders, dashboards, and reporting.
 
-## Current foundation
+## Stack
 
-The project now includes:
+- Frontend: React, Vite, TypeScript
+- Styling: Tailwind CSS
+- State management: Redux Toolkit
+- Auth: Firebase Authentication
+- Database: Cloud Firestore
+- Backend jobs: Firebase Cloud Functions
+- Hosting: Firebase Hosting
+- Testing: Vitest
 
-- Phase 1 app setup with responsive shells and reusable UI components
-- Phase 2 Firebase Authentication with role-based access for `parent`, `staff`, and `admin`
-- Phase 3 Firestore schema models, typed CRUD services, query helpers, and async Redux slices
-- Phase 8 Firebase Cloud Functions email reminder processing with a provider abstraction and staff/admin delivery controls
-- Phase 9 Firebase Cloud Functions SMS reminder processing with provider adapters and queue controls
+## Current system scope
 
-## Firestore collections
+The project currently includes:
 
-Top-level collections in the current schema:
+- role-based authentication for `parent`, `staff`, and `admin`
+- child registration, editing, and profile management
+- immunization schedule generation and completion tracking
+- reminder queue generation
+- backend email and SMS reminder delivery through Cloud Functions
+- parent, staff, and admin dashboards
+- search, filtering, and reporting views
+- automated utility and guard tests
 
-- `users`
-- `children`
-- `immunizationSchedules`
-- `immunizationRecords`
-- `reminders`
-- `notifications`
+## Firebase services used
 
-The collection metadata and query focus areas live in `src/lib/firestore/structure.ts`.
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Hosting
+- Firebase Cloud Functions
+- Cloud Scheduler via scheduled Functions triggers
 
-## Authentication routes
+## Project structure
 
-- `/`
-- `/login`
-- `/register`
-- `/forgot-password`
-- `/reset-password`
+```text
+src/                 frontend app
+functions/           Firebase Cloud Functions
+documentations/      phase-by-phase and run/deploy guides
+docs/                QA and testing notes
+```
 
-## Protected routes
+## Local setup
 
-- `/dashboard/parent`
-- `/dashboard/staff`
-- `/dashboard/admin`
-- `/children`
-- `/immunization-schedule`
-- `/reminders`
-- `/admin`
+### 1. Install dependencies
 
-## Environment variables
+```bash
+pnpm install
+pnpm --dir functions install
+```
 
-Copy `.env.example` to `.env` and provide your Firebase web app values:
+### 2. Configure frontend environment
+
+Copy `.env.example` to `.env`.
+
+Required frontend variables:
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -53,52 +64,94 @@ Copy `.env.example` to `.env` and provide your Firebase web app values:
 - `VITE_FIREBASE_STORAGE_BUCKET`
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_FUNCTIONS_REGION`
 
-## Functions configuration
+### 3. Configure backend environment
 
-Cloud Functions live in [`functions/`](/c:/Users/USER/Downloads/Documents/Codes/medtrack/functions).
+Copy `functions/.env.example` to `functions/.env` for local Functions work, or configure equivalent values in Firebase for production.
 
-Copy `functions/.env.example` to `functions/.env` for local emulator work, or configure equivalent runtime variables in Firebase:
+Backend variables cover:
 
-- `EMAIL_PROVIDER`
-- `EMAIL_FROM_ADDRESS`
-- `EMAIL_FROM_NAME`
-- `MEDTRACK_CLINIC_NAME`
-- `RESEND_API_KEY`
-- `SMS_PROVIDER`
-- `MEDTRACK_SMS_SENDER`
-- `TERMII_API_KEY`
-- `TERMII_SENDER_ID`
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_FROM_NUMBER`
+- email provider selection and sender details
+- SMS provider selection and sender details
+- provider API credentials for Resend, Termii, and Twilio
+- clinic name used in reminder templates
 
-## Local development
+### 4. Configure the Firebase project
+
+Copy `.firebaserc.example` to `.firebaserc` and replace the placeholder project id.
+
+## Running locally
+
+Frontend:
 
 ```bash
-pnpm install
 pnpm dev
-pnpm --dir functions install
+```
+
+Functions build:
+
+```bash
 pnpm functions:build
 ```
 
-## Verification
+Recommended quality checks:
 
-Recent verification completed with:
+```bash
+pnpm lint
+pnpm test
+pnpm build
+pnpm functions:build
+```
 
-- `pnpm lint`
-- `pnpm test`
-- `pnpm build`
-- `pnpm dev --host 127.0.0.1 --port 4175`
+## Deployment
 
-## Testing and QA
+This repo now includes Firebase Hosting and Functions deployment config in `firebase.json`.
 
-Automated checks now cover:
+Build before deploying:
 
-- schedule generation and status utilities
-- reminder queue generation and duplicate prevention
-- auth guard decision logic
-- critical authentication and child-form validation
-- Firebase web config validation
+```bash
+pnpm build
+pnpm functions:build
+```
 
-For a repeatable demo checklist and manual verification flow, see [docs/testing-and-qa.md](/c:/Users/USER/Downloads/Documents/Codes/medtrack/docs/testing-and-qa.md).
+Deploy hosting:
+
+```bash
+pnpm deploy:hosting
+```
+
+Deploy functions:
+
+```bash
+pnpm deploy:functions
+```
+
+Deploy everything:
+
+```bash
+pnpm deploy
+```
+
+These scripts expect the Firebase CLI to be installed globally:
+
+```bash
+npm install -g firebase-tools
+```
+
+## Production-readiness notes
+
+- No email or SMS provider secrets are stored in frontend Vite env files.
+- Frontend Firebase config is validated at runtime and shows a setup notice if incomplete.
+- Firestore and auth service access fail with clear setup messages when Firebase is not configured.
+- Functions compile separately from the frontend and are ready for Firebase deployment.
+
+## Documentation
+
+Phase and setup documentation lives in:
+
+- [`documentations/README.md`](documentations/README.md)
+- [`documentations/phases-overview.md`](documentations/phases-overview.md)
+- [`documentations/getting-the-system-running.md`](documentations/getting-the-system-running.md)
+- [`documentations/deployment-checklist.md`](documentations/deployment-checklist.md)
+- [`docs/testing-and-qa.md`](docs/testing-and-qa.md)

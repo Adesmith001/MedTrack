@@ -25,5 +25,10 @@ dist-ssr
 *.sw?
 .env
 .env.local
-.env.example
 .env.*.local
+functions/.env
+functions/.env.local
+functions/.env.*.local
+.firebase/
+.firebaserc
+!.env.example
