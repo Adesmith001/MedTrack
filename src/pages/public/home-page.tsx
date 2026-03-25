@@ -226,7 +226,10 @@ export function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/register">
-              <Button className="bg-white px-6 py-3 text-base text-slate-950 hover:bg-slate-100">
+              <Button
+                variant="secondary"
+                className="border-white/80 bg-white px-6 py-3 text-base text-slate-950 hover:border-white hover:bg-slate-100"
+              >
                 Create account
               </Button>
             </Link>
