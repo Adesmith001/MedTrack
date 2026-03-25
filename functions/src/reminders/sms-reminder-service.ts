@@ -1,10 +1,7 @@
 import { logger } from 'firebase-functions'
-import { createEmailProvider, getEmailRuntimeConfig } from '../email/email-provider-factory'
-import { buildReminderEmailTemplate } from '../email/templates/reminder-email-template'
-import type {
-  ChildDocument,
-  ImmunizationScheduleDocument,
-} from '../types'
+import type { ChildDocument, ImmunizationScheduleDocument } from '../types'
+import { createSmsProvider, getSmsRuntimeConfig } from '../sms/sms-provider-factory'
+import { buildReminderSmsMessage } from '../sms/templates/reminder-sms-template'
 import {
   getChildDocument,
   getScheduleDocument,
@@ -15,12 +12,12 @@ import {
   type ReminderDeliveryResult,
 } from './reminder-delivery-utils'
 
-interface ProcessEmailRemindersOptions {
+interface ProcessSmsRemindersOptions {
   reminderId?: string
   allowRetry?: boolean
 }
 
-export interface EmailReminderDeliveryResult {
+export interface SmsReminderDeliveryResult {
   reminderId: string
   status: 'sent' | 'failed' | 'skipped'
   provider: string | null
@@ -28,35 +25,35 @@ export interface EmailReminderDeliveryResult {
   reason: string | null
 }
 
-export interface ProcessEmailRemindersResult {
+export interface ProcessSmsRemindersResult {
   attemptedCount: number
   sentCount: number
   failedCount: number
   skippedCount: number
-  results: EmailReminderDeliveryResult[]
+  results: SmsReminderDeliveryResult[]
 }
 
-export async function processEmailReminders(
-  options: ProcessEmailRemindersOptions = {},
-): Promise<ProcessEmailRemindersResult> {
-  const runtimeConfig = getEmailRuntimeConfig()
-  const provider = createEmailProvider(runtimeConfig)
+export async function processSmsReminders(
+  options: ProcessSmsRemindersOptions = {},
+): Promise<ProcessSmsRemindersResult> {
+  const runtimeConfig = getSmsRuntimeConfig()
+  const provider = createSmsProvider(runtimeConfig)
   const reminders = await listTargetReminders({
     reminderId: options.reminderId,
-    channel: 'email',
+    channel: 'sms',
   })
   const childCache = new Map<string, ChildDocument>()
   const scheduleCache = new Map<string, ImmunizationScheduleDocument>()
   const results: ReminderDeliveryResult[] = []
 
   for (const reminder of reminders) {
-    if (reminder.data.channel !== 'email') {
+    if (reminder.data.channel !== 'sms') {
       results.push({
         reminderId: reminder.id,
         status: 'skipped',
         provider: null,
         deliveryId: null,
-        reason: 'Reminder is not configured for email delivery.',
+        reason: 'Reminder is not configured for SMS delivery.',
       })
       continue
     }
@@ -67,14 +64,14 @@ export async function processEmailReminders(
         status: 'skipped',
         provider: reminder.data.deliveryProvider,
         deliveryId: reminder.data.deliveryId,
-        reason: `Reminder status "${reminder.data.status}" is not eligible for email sending.`,
+        reason: `Reminder status "${reminder.data.status}" is not eligible for SMS sending.`,
       })
       continue
     }
 
     const child = await getChildDocument(reminder.data.childId, childCache)
     const schedule = await getScheduleDocument(reminder.data.scheduleId, scheduleCache)
-    const resolvedRecipient = child?.parentEmail.trim().toLowerCase() ?? ''
+    const resolvedRecipient = child?.parentPhone.trim() ?? ''
 
     if (!child) {
       results.push(
@@ -97,35 +94,29 @@ export async function processEmailReminders(
 
     if (!resolvedRecipient) {
       results.push(
-        await markReminderFailed(reminder.id, reminder.data.recipient, null, 'Parent email is missing.'),
+        await markReminderFailed(reminder.id, reminder.data.recipient, null, 'Parent phone number is missing.'),
       )
       continue
     }
 
     try {
-      const template = buildReminderEmailTemplate({
+      const message = buildReminderSmsMessage({
         childName: child.fullName,
         vaccineName: schedule.vaccineName,
         dueDate: schedule.dueDate,
-        clinicName: runtimeConfig.clinicName || child.hospitalId || 'MedTrack Immunization Clinic',
-        reminderMessage: reminder.data.message,
-        parentName: child.parentName,
+        clinicName: runtimeConfig.clinicName || child.hospitalId || 'MedTrack Clinic',
       })
       const delivery = await provider.send({
         to: resolvedRecipient,
-        from: {
-          email: runtimeConfig.fromAddress,
-          name: runtimeConfig.fromName,
-        },
-        subject: template.subject,
-        html: template.html,
-        text: template.text,
+        from: runtimeConfig.senderId,
+        message,
       })
+
       results.push(await markReminderSent(reminder.id, resolvedRecipient, delivery.provider, delivery.deliveryId))
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown email delivery error.'
+      const message = error instanceof Error ? error.message : 'Unknown SMS delivery error.'
 
-      logger.error('Failed to send reminder email', {
+      logger.error('Failed to send reminder SMS', {
         reminderId: reminder.id,
         error: message,
       })

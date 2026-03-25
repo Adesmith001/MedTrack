@@ -17,6 +17,11 @@ import {
   type SendEmailRemindersRequest,
   type SendEmailRemindersResponse,
 } from '../../services/reminder-email-service'
+import {
+  reminderSmsService,
+  type SendSmsRemindersRequest,
+  type SendSmsRemindersResponse,
+} from '../../services/reminder-sms-service'
 
 type RemindersState = EntityState<Reminder>
 
@@ -82,6 +87,23 @@ export const sendReminderEmails = createAsyncThunk(
     payload?: SendEmailRemindersRequest,
   ): Promise<{ summary: SendEmailRemindersResponse; reminders: Reminder[] }> => {
     const summary = await reminderEmailService.sendNow(payload)
+    const refreshedReminders = (
+      await Promise.all(summary.results.map((result) => remindersService.getById(result.reminderId)))
+    ).filter((reminder): reminder is Reminder => reminder !== null)
+
+    return {
+      summary,
+      reminders: refreshedReminders,
+    }
+  },
+)
+
+export const sendReminderSms = createAsyncThunk(
+  'reminders/sendSms',
+  async (
+    payload?: SendSmsRemindersRequest,
+  ): Promise<{ summary: SendSmsRemindersResponse; reminders: Reminder[] }> => {
+    const summary = await reminderSmsService.sendNow(payload)
     const refreshedReminders = (
       await Promise.all(summary.results.map((result) => remindersService.getById(result.reminderId)))
     ).filter((reminder): reminder is Reminder => reminder !== null)
@@ -163,6 +185,20 @@ const remindersSlice = createSlice({
       .addCase(sendReminderEmails.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message ?? 'Failed to send email reminders.'
+      })
+      .addCase(sendReminderSms.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
+      .addCase(sendReminderSms.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        action.payload.reminders.forEach((reminder) => {
+          state.items = upsertEntity(state.items, reminder)
+        })
+      })
+      .addCase(sendReminderSms.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to send SMS reminders.'
       })
   },
 })

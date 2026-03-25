@@ -17,6 +17,7 @@ import {
   fetchReminders,
   generateReminderQueue,
   sendReminderEmails,
+  sendReminderSms,
 } from '../features/reminders/reminders-slice'
 import { formatReminderTriggerType } from '../features/reminders/reminder-rules'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
@@ -24,7 +25,13 @@ import { formatDisplayDate } from '../lib/date'
 import type { Reminder, ReminderStatus } from '../types/models'
 
 type ReminderStatusFilter = ReminderStatus | 'all'
-type ReminderActionState = `send:${string}` | 'send-batch' | 'generate' | null
+type ReminderActionState =
+  | `send:email:${string}`
+  | `send:sms:${string}`
+  | 'send-batch-email'
+  | 'send-batch-sms'
+  | 'generate'
+  | null
 
 interface ReminderQueueItem {
   reminder: Reminder
@@ -50,8 +57,16 @@ function formatAttemptAtLabel(value: string | null): string {
   return value ? new Date(value).toLocaleString() : 'Not attempted yet'
 }
 
-function canSendEmailNow(reminder: Reminder): boolean {
-  return reminder.channel === 'email' && (reminder.status === 'pending' || reminder.status === 'failed')
+function canSendReminderNow(reminder: Reminder): boolean {
+  return reminder.status === 'pending' || reminder.status === 'failed'
+}
+
+function getReminderActionLabel(reminder: Reminder): string {
+  if (reminder.status === 'failed') {
+    return reminder.channel === 'email' ? 'Retry email' : 'Retry SMS'
+  }
+
+  return reminder.channel === 'email' ? 'Send email' : 'Send SMS'
 }
 
 function getReminderMetaLines(reminder: Reminder): string[] {
@@ -186,6 +201,9 @@ export function RemindersPage() {
       pendingEmail: reminders.filter(
         (reminder) => reminder.channel === 'email' && reminder.status === 'pending',
       ).length,
+      pendingSms: reminders.filter(
+        (reminder) => reminder.channel === 'sms' && reminder.status === 'pending',
+      ).length,
     }),
     [reminders],
   )
@@ -221,7 +239,7 @@ export function RemindersPage() {
   async function handleSendEmails(reminderId?: string) {
     setGenerationSummary(null)
     setDeliverySummary(null)
-    setActiveAction(reminderId ? `send:${reminderId}` : 'send-batch')
+    setActiveAction(reminderId ? `send:email:${reminderId}` : 'send-batch-email')
     dispatch(clearRemindersFeedback())
 
     const result = await dispatch(sendReminderEmails(reminderId ? { reminderId } : undefined))
@@ -234,6 +252,29 @@ export function RemindersPage() {
 
       setDeliverySummary(
         `Processed ${attemptedCount} email reminder${attemptedCount === 1 ? '' : 's'}. Sent ${sentCount}, failed ${failedCount}, skipped ${skippedCount}.${failureMessages.length > 0 ? ` Latest failure: ${failureMessages[0]}` : ''}`,
+      )
+      await refreshReminderQueue()
+    }
+
+    setActiveAction(null)
+  }
+
+  async function handleSendSms(reminderId?: string) {
+    setGenerationSummary(null)
+    setDeliverySummary(null)
+    setActiveAction(reminderId ? `send:sms:${reminderId}` : 'send-batch-sms')
+    dispatch(clearRemindersFeedback())
+
+    const result = await dispatch(sendReminderSms(reminderId ? { reminderId } : undefined))
+
+    if (sendReminderSms.fulfilled.match(result)) {
+      const { attemptedCount, failedCount, results, sentCount, skippedCount } = result.payload.summary
+      const failureMessages = results
+        .filter((item) => item.status === 'failed' && item.reason)
+        .map((item) => item.reason as string)
+
+      setDeliverySummary(
+        `Processed ${attemptedCount} SMS reminder${attemptedCount === 1 ? '' : 's'}. Sent ${sentCount}, failed ${failedCount}, skipped ${skippedCount}.${failureMessages.length > 0 ? ` Latest failure: ${failureMessages[0]}` : ''}`,
       )
       await refreshReminderQueue()
     }
@@ -270,22 +311,24 @@ export function RemindersPage() {
         </div>
       ),
       formatCreatedAtLabel(item.reminder),
-      canSendEmailNow(item.reminder) ? (
+      canSendReminderNow(item.reminder) ? (
         <Button
           key={`${item.reminder.id}-action`}
           variant="secondary"
-          onClick={() => handleSendEmails(item.reminder.id)}
+          onClick={() =>
+            item.reminder.channel === 'email'
+              ? handleSendEmails(item.reminder.id)
+              : handleSendSms(item.reminder.id)
+          }
           disabled={remindersStatus === 'loading'}
         >
-          {activeAction === `send:${item.reminder.id}`
+          {activeAction === `send:${item.reminder.channel}:${item.reminder.id}`
             ? 'Sending...'
-            : item.reminder.status === 'failed'
-              ? 'Retry email'
-              : 'Send now'}
+            : getReminderActionLabel(item.reminder)}
         </Button>
       ) : (
         <span key={`${item.reminder.id}-action`} className="text-xs text-slate-500">
-          {item.reminder.channel === 'sms' ? 'SMS delivery pending a later phase' : 'No action available'}
+          No action available
         </span>
       ),
     ],
@@ -301,9 +344,9 @@ export function RemindersPage() {
       <SectionHeader
         eyebrow="Operations"
         title="Reminder queue"
-        description="Generate reminder entries, send pending email reminders through Cloud Functions, and review delivery outcomes for staff and admin workflows."
+        description="Generate reminder entries, send pending email or SMS reminders through Cloud Functions, and review delivery outcomes for staff and admin workflows."
         actions={
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 lg:flex-row">
             <Button onClick={handleGenerateQueue} disabled={remindersStatus === 'loading'}>
               {activeAction === 'generate' ? 'Generating queue...' : 'Generate pending reminders'}
             </Button>
@@ -312,9 +355,18 @@ export function RemindersPage() {
               onClick={() => handleSendEmails()}
               disabled={remindersStatus === 'loading' || queueCounts.pendingEmail === 0}
             >
-              {activeAction === 'send-batch'
+              {activeAction === 'send-batch-email'
                 ? 'Sending emails...'
                 : `Send pending emails (${queueCounts.pendingEmail})`}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleSendSms()}
+              disabled={remindersStatus === 'loading' || queueCounts.pendingSms === 0}
+            >
+              {activeAction === 'send-batch-sms'
+                ? 'Sending SMS...'
+                : `Send pending SMS (${queueCounts.pendingSms})`}
             </Button>
           </div>
         }
@@ -481,18 +533,20 @@ export function RemindersPage() {
                   </div>
                 </dl>
 
-                {canSendEmailNow(item.reminder) ? (
+                {canSendReminderNow(item.reminder) ? (
                   <div className="mt-4">
                     <Button
                       variant="secondary"
-                      onClick={() => handleSendEmails(item.reminder.id)}
+                      onClick={() =>
+                        item.reminder.channel === 'email'
+                          ? handleSendEmails(item.reminder.id)
+                          : handleSendSms(item.reminder.id)
+                      }
                       disabled={remindersStatus === 'loading'}
                     >
-                      {activeAction === `send:${item.reminder.id}`
+                      {activeAction === `send:${item.reminder.channel}:${item.reminder.id}`
                         ? 'Sending...'
-                        : item.reminder.status === 'failed'
-                          ? 'Retry email'
-                          : 'Send now'}
+                        : getReminderActionLabel(item.reminder)}
                     </Button>
                   </div>
                 ) : null}

@@ -10,6 +10,7 @@ The project now includes:
 - Phase 2 Firebase Authentication with role-based access for `parent`, `staff`, and `admin`
 - Phase 3 Firestore schema models, typed CRUD services, query helpers, and async Redux slices
 - Phase 8 Firebase Cloud Functions email reminder processing with a provider abstraction and staff/admin delivery controls
+- Phase 9 Firebase Cloud Functions SMS reminder processing with provider adapters and queue controls
 
 ## Firestore collections
 
@@ -64,6 +65,13 @@ Copy `functions/.env.example` to `functions/.env` for local emulator work, or co
 - `EMAIL_FROM_NAME`
 - `MEDTRACK_CLINIC_NAME`
 - `RESEND_API_KEY`
+- `SMS_PROVIDER`
+- `MEDTRACK_SMS_SENDER`
+- `TERMII_API_KEY`
+- `TERMII_SENDER_ID`
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_FROM_NUMBER`
 
 ## Local development
 
