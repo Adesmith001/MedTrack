@@ -44,8 +44,8 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-[#f3f7f1] text-slate-950">
       <section className="relative overflow-hidden border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.18),transparent_32%),linear-gradient(135deg,#f7fbf7_0%,#eef4ef_55%,#f8fbfc_100%)]">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-[size:26px_26px] opacity-60" />
-        <div className="relative mx-auto grid min-h-[100svh] max-w-7xl gap-10 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.85fr)] lg:px-8 lg:py-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-size-[26px_26px] opacity-60" />
+        <div className="relative mx-auto grid min-h-svh max-w-7xl gap-10 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.85fr)] lg:px-8 lg:py-10">
           <div className="flex min-h-full flex-col">
             <header className="flex items-center justify-between">
               <Link to="/" className="font-display text-3xl font-bold tracking-tight text-slate-950">

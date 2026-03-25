@@ -119,6 +119,10 @@ export function buildPendingReminderPayloads(
               recipient,
               message: buildReminderMessage(child, schedule, channel, rule.label),
               sentAt: null,
+              lastAttemptAt: null,
+              failureReason: null,
+              deliveryProvider: null,
+              deliveryId: null,
             },
           })
         })

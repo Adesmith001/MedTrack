@@ -67,6 +67,10 @@ export interface Reminder extends BaseDocument {
   recipient: string
   message: string
   sentAt: string | null
+  lastAttemptAt: string | null
+  failureReason: string | null
+  deliveryProvider: string | null
+  deliveryId: string | null
 }
 
 export interface Notification extends BaseDocument {

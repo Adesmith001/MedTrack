@@ -12,6 +12,11 @@ import {
   type GenerateReminderQueueOptions,
   type GenerateReminderQueueResult,
 } from '../../services/reminder-queue-service'
+import {
+  reminderEmailService,
+  type SendEmailRemindersRequest,
+  type SendEmailRemindersResponse,
+} from '../../services/reminder-email-service'
 
 type RemindersState = EntityState<Reminder>
 
@@ -71,6 +76,23 @@ export const generateReminderQueue = createAsyncThunk(
     reminderQueueService.generatePending(options),
 )
 
+export const sendReminderEmails = createAsyncThunk(
+  'reminders/sendEmails',
+  async (
+    payload?: SendEmailRemindersRequest,
+  ): Promise<{ summary: SendEmailRemindersResponse; reminders: Reminder[] }> => {
+    const summary = await reminderEmailService.sendNow(payload)
+    const refreshedReminders = (
+      await Promise.all(summary.results.map((result) => remindersService.getById(result.reminderId)))
+    ).filter((reminder): reminder is Reminder => reminder !== null)
+
+    return {
+      summary,
+      reminders: refreshedReminders,
+    }
+  },
+)
+
 const remindersSlice = createSlice({
   name: 'remindersData',
   initialState,
@@ -127,6 +149,20 @@ const remindersSlice = createSlice({
       .addCase(generateReminderQueue.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message ?? 'Failed to generate reminder queue.'
+      })
+      .addCase(sendReminderEmails.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
+      .addCase(sendReminderEmails.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        action.payload.reminders.forEach((reminder) => {
+          state.items = upsertEntity(state.items, reminder)
+        })
+      })
+      .addCase(sendReminderEmails.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message ?? 'Failed to send email reminders.'
       })
   },
 })

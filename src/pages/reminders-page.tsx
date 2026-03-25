@@ -16,6 +16,7 @@ import {
   clearRemindersFeedback,
   fetchReminders,
   generateReminderQueue,
+  sendReminderEmails,
 } from '../features/reminders/reminders-slice'
 import { formatReminderTriggerType } from '../features/reminders/reminder-rules'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
@@ -23,6 +24,7 @@ import { formatDisplayDate } from '../lib/date'
 import type { Reminder, ReminderStatus } from '../types/models'
 
 type ReminderStatusFilter = ReminderStatus | 'all'
+type ReminderActionState = `send:${string}` | 'send-batch' | 'generate' | null
 
 interface ReminderQueueItem {
   reminder: Reminder
@@ -44,6 +46,38 @@ function formatCreatedAtLabel(reminder: Reminder): string {
   return reminder.createdAt ? reminder.createdAt.toDate().toLocaleString() : 'Syncing...'
 }
 
+function formatAttemptAtLabel(value: string | null): string {
+  return value ? new Date(value).toLocaleString() : 'Not attempted yet'
+}
+
+function canSendEmailNow(reminder: Reminder): boolean {
+  return reminder.channel === 'email' && (reminder.status === 'pending' || reminder.status === 'failed')
+}
+
+function getReminderMetaLines(reminder: Reminder): string[] {
+  const lines: string[] = []
+
+  if (reminder.deliveryProvider) {
+    lines.push(`Provider: ${reminder.deliveryProvider}`)
+  }
+
+  if (reminder.deliveryId) {
+    lines.push(`Delivery ID: ${reminder.deliveryId}`)
+  }
+
+  if (reminder.failureReason) {
+    lines.push(`Failure: ${reminder.failureReason}`)
+  }
+
+  lines.push(`Last attempt: ${formatAttemptAtLabel(reminder.lastAttemptAt)}`)
+
+  if (reminder.sentAt) {
+    lines.push(`Sent at: ${new Date(reminder.sentAt).toLocaleString()}`)
+  }
+
+  return lines
+}
+
 export function RemindersPage() {
   const dispatch = useAppDispatch()
   const children = useAppSelector((state) => state.children.items)
@@ -60,6 +94,8 @@ export function RemindersPage() {
   const [vaccineFilter, setVaccineFilter] = useState('')
   const [dueDateFilter, setDueDateFilter] = useState('')
   const [generationSummary, setGenerationSummary] = useState<string | null>(null)
+  const [deliverySummary, setDeliverySummary] = useState<string | null>(null)
+  const [activeAction, setActiveAction] = useState<ReminderActionState>(null)
   const deferredChildFilter = useDeferredValue(childFilter)
   const deferredVaccineFilter = useDeferredValue(vaccineFilter)
 
@@ -147,35 +183,25 @@ export function RemindersPage() {
       pending: reminders.filter((reminder) => reminder.status === 'pending').length,
       sent: reminders.filter((reminder) => reminder.status === 'sent').length,
       failed: reminders.filter((reminder) => reminder.status === 'failed').length,
+      pendingEmail: reminders.filter(
+        (reminder) => reminder.channel === 'email' && reminder.status === 'pending',
+      ).length,
     }),
     [reminders],
   )
 
-  const rows = filteredQueue.map((item) => ({
-    id: item.reminder.id,
-    cells: [
-      item.childName,
-      item.vaccineName,
-      item.dueDate ? formatDisplayDate(item.dueDate) : 'Unknown',
-      formatReminderTriggerType(item.reminder.triggerType),
-      item.reminder.channel.toUpperCase(),
-      item.reminder.recipient,
-      (
-        <Badge key={`${item.reminder.id}-status`} variant={reminderStatusBadgeVariants[item.reminder.status]}>
-          {item.reminder.status}
-        </Badge>
-      ),
-      formatCreatedAtLabel(item.reminder),
-    ],
-  }))
-
-  const isInitialLoading =
-    reminders.length === 0 &&
-    (childrenStatus === 'loading' || schedulesStatus === 'loading' || remindersStatus === 'loading')
-  const combinedError = remindersError ?? schedulesError ?? childrenError
+  async function refreshReminderQueue() {
+    await dispatch(
+      fetchReminders({
+        sort: [{ field: 'createdAt', direction: 'desc' }],
+      }),
+    )
+  }
 
   async function handleGenerateQueue() {
     setGenerationSummary(null)
+    setDeliverySummary(null)
+    setActiveAction('generate')
     dispatch(clearRemindersFeedback())
 
     const result = await dispatch(generateReminderQueue())
@@ -186,19 +212,111 @@ export function RemindersPage() {
       setGenerationSummary(
         `Created ${createdCount} pending reminder${createdCount === 1 ? '' : 's'} for ${referenceDate}. Skipped ${duplicateCount} duplicate queue slot${duplicateCount === 1 ? '' : 's'} out of ${eligibleCount} eligible queue slot${eligibleCount === 1 ? '' : 's'}.`,
       )
+      await refreshReminderQueue()
     }
+
+    setActiveAction(null)
   }
+
+  async function handleSendEmails(reminderId?: string) {
+    setGenerationSummary(null)
+    setDeliverySummary(null)
+    setActiveAction(reminderId ? `send:${reminderId}` : 'send-batch')
+    dispatch(clearRemindersFeedback())
+
+    const result = await dispatch(sendReminderEmails(reminderId ? { reminderId } : undefined))
+
+    if (sendReminderEmails.fulfilled.match(result)) {
+      const { attemptedCount, failedCount, results, sentCount, skippedCount } = result.payload.summary
+      const failureMessages = results
+        .filter((item) => item.status === 'failed' && item.reason)
+        .map((item) => item.reason as string)
+
+      setDeliverySummary(
+        `Processed ${attemptedCount} email reminder${attemptedCount === 1 ? '' : 's'}. Sent ${sentCount}, failed ${failedCount}, skipped ${skippedCount}.${failureMessages.length > 0 ? ` Latest failure: ${failureMessages[0]}` : ''}`,
+      )
+      await refreshReminderQueue()
+    }
+
+    setActiveAction(null)
+  }
+
+  const rows = filteredQueue.map((item) => ({
+    id: item.reminder.id,
+    cells: [
+      item.childName,
+      item.vaccineName,
+      item.dueDate ? formatDisplayDate(item.dueDate) : 'Unknown',
+      formatReminderTriggerType(item.reminder.triggerType),
+      item.reminder.channel.toUpperCase(),
+      (
+        <div key={`${item.reminder.id}-recipient`} className="space-y-1">
+          <p className="text-slate-900">{item.reminder.recipient}</p>
+          {item.reminder.failureReason ? (
+            <p className="text-xs text-rose-600">{item.reminder.failureReason}</p>
+          ) : null}
+        </div>
+      ),
+      (
+        <div key={`${item.reminder.id}-status`} className="space-y-2">
+          <Badge variant={reminderStatusBadgeVariants[item.reminder.status]}>
+            {item.reminder.status}
+          </Badge>
+          <div className="space-y-1 text-xs text-slate-500">
+            {getReminderMetaLines(item.reminder).map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        </div>
+      ),
+      formatCreatedAtLabel(item.reminder),
+      canSendEmailNow(item.reminder) ? (
+        <Button
+          key={`${item.reminder.id}-action`}
+          variant="secondary"
+          onClick={() => handleSendEmails(item.reminder.id)}
+          disabled={remindersStatus === 'loading'}
+        >
+          {activeAction === `send:${item.reminder.id}`
+            ? 'Sending...'
+            : item.reminder.status === 'failed'
+              ? 'Retry email'
+              : 'Send now'}
+        </Button>
+      ) : (
+        <span key={`${item.reminder.id}-action`} className="text-xs text-slate-500">
+          {item.reminder.channel === 'sms' ? 'SMS delivery pending a later phase' : 'No action available'}
+        </span>
+      ),
+    ],
+  }))
+
+  const isInitialLoading =
+    reminders.length === 0 &&
+    (childrenStatus === 'loading' || schedulesStatus === 'loading' || remindersStatus === 'loading')
+  const combinedError = remindersError ?? schedulesError ?? childrenError
 
   return (
     <PageContainer>
       <SectionHeader
         eyebrow="Operations"
         title="Reminder queue"
-        description="Generate and review pending reminder entries before email and SMS delivery is added in a later phase."
+        description="Generate reminder entries, send pending email reminders through Cloud Functions, and review delivery outcomes for staff and admin workflows."
         actions={
-          <Button onClick={handleGenerateQueue} disabled={remindersStatus === 'loading'}>
-            {remindersStatus === 'loading' ? 'Generating queue...' : 'Generate pending reminders'}
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button onClick={handleGenerateQueue} disabled={remindersStatus === 'loading'}>
+              {activeAction === 'generate' ? 'Generating queue...' : 'Generate pending reminders'}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleSendEmails()}
+              disabled={remindersStatus === 'loading' || queueCounts.pendingEmail === 0}
+            >
+              {activeAction === 'send-batch'
+                ? 'Sending emails...'
+                : `Send pending emails (${queueCounts.pendingEmail})`}
+            </Button>
+          </div>
         }
       />
 
@@ -264,6 +382,12 @@ export function RemindersPage() {
         </Card>
       ) : null}
 
+      {deliverySummary ? (
+        <Card>
+          <p className="rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-700">{deliverySummary}</p>
+        </Card>
+      ) : null}
+
       {combinedError ? (
         <Card>
           <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{combinedError}</p>
@@ -298,6 +422,7 @@ export function RemindersPage() {
                 { key: 'recipient', label: 'Recipient' },
                 { key: 'status', label: 'Status' },
                 { key: 'createdAt', label: 'Queued at' },
+                { key: 'action', label: 'Action' },
               ]}
               rows={rows}
               emptyMessage="No reminder entries match the current filters."
@@ -343,10 +468,34 @@ export function RemindersPage() {
                     <dd className="mt-1 text-slate-900">{item.reminder.message}</dd>
                   </div>
                   <div className="sm:col-span-2">
+                    <dt className="font-medium text-slate-500">Delivery details</dt>
+                    <dd className="mt-1 space-y-1 text-slate-900">
+                      {getReminderMetaLines(item.reminder).map((line) => (
+                        <p key={line}>{line}</p>
+                      ))}
+                    </dd>
+                  </div>
+                  <div className="sm:col-span-2">
                     <dt className="font-medium text-slate-500">Queued at</dt>
                     <dd className="mt-1 text-slate-900">{formatCreatedAtLabel(item.reminder)}</dd>
                   </div>
                 </dl>
+
+                {canSendEmailNow(item.reminder) ? (
+                  <div className="mt-4">
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleSendEmails(item.reminder.id)}
+                      disabled={remindersStatus === 'loading'}
+                    >
+                      {activeAction === `send:${item.reminder.id}`
+                        ? 'Sending...'
+                        : item.reminder.status === 'failed'
+                          ? 'Retry email'
+                          : 'Send now'}
+                    </Button>
+                  </div>
+                ) : null}
               </Card>
             ))}
           </div>

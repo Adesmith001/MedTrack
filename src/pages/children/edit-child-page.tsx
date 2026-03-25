@@ -47,7 +47,7 @@ export function EditChildPage() {
   if (status === 'loading' && !current) {
     return (
       <PageContainer>
-        <Card className="flex min-h-[240px] items-center justify-center">
+        <Card className="flex min-h-60 items-center justify-center">
           <Loader label="Loading child record..." />
         </Card>
       </PageContainer>

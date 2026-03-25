@@ -9,6 +9,7 @@ The project now includes:
 - Phase 1 app setup with responsive shells and reusable UI components
 - Phase 2 Firebase Authentication with role-based access for `parent`, `staff`, and `admin`
 - Phase 3 Firestore schema models, typed CRUD services, query helpers, and async Redux slices
+- Phase 8 Firebase Cloud Functions email reminder processing with a provider abstraction and staff/admin delivery controls
 
 ## Firestore collections
 
@@ -52,11 +53,25 @@ Copy `.env.example` to `.env` and provide your Firebase web app values:
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
 
+## Functions configuration
+
+Cloud Functions live in [`functions/`](/c:/Users/USER/Downloads/Documents/Codes/medtrack/functions).
+
+Copy `functions/.env.example` to `functions/.env` for local emulator work, or configure equivalent runtime variables in Firebase:
+
+- `EMAIL_PROVIDER`
+- `EMAIL_FROM_ADDRESS`
+- `EMAIL_FROM_NAME`
+- `MEDTRACK_CLINIC_NAME`
+- `RESEND_API_KEY`
+
 ## Local development
 
 ```bash
 pnpm install
 pnpm dev
+pnpm --dir functions install
+pnpm functions:build
 ```
 
 ## Verification
