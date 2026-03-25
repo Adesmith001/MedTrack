@@ -2,24 +2,37 @@
 
 MedTrack is a web-based child immunization tracking system built with React, Vite, TypeScript, Tailwind CSS, Redux Toolkit, and Firebase.
 
-## Phase 1 foundation
+## Current foundation
 
-This phase delivers the application setup and UI foundation:
+The project now includes:
 
-- Vite + React + TypeScript project structure
-- Tailwind CSS configured through Vite
-- React Router with public and workspace route shells
-- Redux Toolkit store with `authSlice`, `uiSlice`, and `appConfigSlice`
-- Firebase modular SDK initialization from environment variables
-- Reusable base UI components for later phases
-- Placeholder pages for auth, dashboards, children, schedule, reminders, and admin
+- Phase 1 app setup with responsive shells and reusable UI components
+- Phase 2 Firebase Authentication with role-based access for `parent`, `staff`, and `admin`
+- Phase 3 Firestore schema models, typed CRUD services, query helpers, and async Redux slices
 
-## Available routes
+## Firestore collections
+
+Top-level collections in the current schema:
+
+- `users`
+- `children`
+- `immunizationSchedules`
+- `immunizationRecords`
+- `reminders`
+- `notifications`
+
+The collection metadata and query focus areas live in `src/lib/firestore/structure.ts`.
+
+## Authentication routes
 
 - `/`
 - `/login`
 - `/register`
 - `/forgot-password`
+- `/reset-password`
+
+## Protected routes
+
 - `/dashboard/parent`
 - `/dashboard/staff`
 - `/dashboard/admin`
@@ -48,8 +61,8 @@ pnpm dev
 
 ## Verification
 
-The Phase 1 foundation was verified with:
+Recent verification completed with:
 
 - `pnpm lint`
 - `pnpm build`
-- `pnpm dev --host 127.0.0.1 --port 4174`
+- `pnpm dev --host 127.0.0.1 --port 4175`
